@@ -14,7 +14,7 @@ Modello in due parti **tenute separate**:
 ## Uso
 
 ```bash
-pip install pandas numpy scikit-learn
+pip install -r requirements.txt
 python main.py --mq 75 --stato 3 --distanza-mare 0.2 --ascensore --garage
 ```
 
@@ -23,16 +23,59 @@ python main.py --mq 75 --stato 3 --distanza-mare 0.2 --ascensore --garage
 Output: valore di vendita stimato oggi con intervallo (quantili 10–90% dei
 residui out-of-fold) + forbice a 3 anni nei tre scenari.
 
+## Annunci reali dall'API Idealista
+
+**Nota sulle "API pubbliche"**: né Idealista né Immobiliare.it hanno un'API
+liberamente chiamabile.
+
+- **Idealista** ha un'API REST vera (`api.idealista.com`) ma **gated**: serve
+  una coppia `apikey`/`secret` da richiedere e far approvare su
+  [developers.idealista.com/access-request](https://developers.idealista.com/access-request)
+  (OAuth2 `client_credentials`, tier gratuito ~100 richieste/mese). È l'unica
+  integrabile via codice, ed è quella implementata qui (`idealista_api.py`).
+- **Immobiliare.it** non espone un'API pubblica di ricerca: quella che chiamano
+  "API" serve alle agenzie per *pubblicare* annunci, e i dati di mercato sono il
+  prodotto a pagamento "Insights". Non integrabile per raccolta dati.
+
+Con le credenziali impostate:
+
+```bash
+export IDEALISTA_API_KEY=...   IDEALISTA_SECRET=...
+python aggiorna_dati_idealista.py          # riscrive data/annunci_andora.csv con annunci reali
+python main.py --mq 75 --stato 3 --distanza-mare 0.2 --ascensore
+# oppure in un colpo solo:
+python main.py --fetch --mq 75 --stato 3 --distanza-mare 0.2
+```
+
+Senza credenziali entrambi i comandi **saltano pulito** e la pipeline resta sui
+dati illustrativi — nessun errore, nessuna sovrascrittura.
+
+Cosa fa il client (`idealista_api.py`):
+
+- OAuth2 → cerca annunci di vendita (`operation=sale`, `propertyType=homes`)
+  entro 3 km dal centro di Andora, con paginazione;
+- mappa i campi API sulle nostre colonne: `size`→mq, `price`→prezzo richiesto,
+  `hasLift`→ascensore, `parkingSpace.hasParkingSpace`→garage,
+  `status`→stato (`renew`=2, `good`=3, `newdevelopment`=4; il livello 1 "da
+  ristrutturare" non è distinguibile via API);
+- **distanza dal mare**: l'API non la fornisce, viene stimata da lat/lon
+  dell'annuncio rispetto alla battigia di Andora (haversine sul punto di costa
+  più vicino) — approssimazione, non un dato ufficiale.
+
+Gli annunci Idealista restano **prezzi richiesti**: lo sconto del 12% verso il
+prezzo di chiusura è applicato a valle in `dati.py`, come per i dati illustrativi.
+
 ## Dati (cartella `data/`) — cosa è reale e cosa no
 
 | File | Natura | Stato attuale |
 |---|---|---|
 | `omi_quotazioni_andora.csv` | Quotazioni OMI (€/mq da **compravendite reali**) per zona B3 litorale/Via Aurelia e semicentrale | Valori **approssimativi** trascritti da fonti pubbliche che ripubblicano l'OMI — da sostituire col download ufficiale |
 | `omi_storico_andora.csv` | Serie storica €/mq della zona (alimenta gli scenari della Parte 2) | Ricostruzione **approssimativa** del trend — da sostituire con la serie semestrale OMI ufficiale |
-| `annunci_andora.csv` | Annunci con **prezzi RICHIESTI** | **Sintetici/illustrativi** (generati da `genera_annunci_esempio.py`, seed fisso) — da sostituire con annunci veri Idealista/Immobiliare.it, stesse colonne |
+| `annunci_andora.csv` | Annunci con **prezzi RICHIESTI** | **Sintetici/illustrativi** (generati da `genera_annunci_esempio.py`, seed fisso) — sostituibili con annunci reali via `aggiorna_dati_idealista.py` (API Idealista), stesse colonne |
 
-Per usare dati reali basta sostituire i tre CSV mantenendo le colonne: nessuna
-modifica al codice.
+Per usare dati reali: gli annunci si aggiornano dall'API Idealista (vedi sotto);
+per le quotazioni/serie storica OMI basta sostituire i due CSV mantenendo le
+colonne, senza modifiche al codice.
 
 ## Scelte metodologiche
 

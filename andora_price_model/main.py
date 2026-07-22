@@ -2,6 +2,11 @@
 
 Uso:
   python main.py --mq 75 --stato 3 --distanza-mare 0.2 --ascensore --garage
+  python main.py --fetch --mq 75 --stato 3 --distanza-mare 0.2   # aggiorna da API Idealista
+
+Con --fetch, se sono impostate IDEALISTA_API_KEY/SECRET, gli annunci vengono
+scaricati dall'API Idealista e sostituiscono il CSV prima del training;
+altrimenti si usa il CSV esistente.
 
 Output: valore di vendita stimato OGGI (con intervallo empirico) + forbice a
 3 anni in tre scenari (pessimista/base/ottimista) dal trend storico OMI.
@@ -13,6 +18,18 @@ from parte1_modello import addestra
 from parte2_proiezione import stampa_proiezione
 
 
+def _aggiorna_da_idealista():
+    from idealista_api import CredenzialiMancanti, scarica_annunci, scrivi_csv
+    from aggiorna_dati_idealista import CSV
+    try:
+        df = scarica_annunci()
+    except CredenzialiMancanti as e:
+        print(f"[--fetch saltato] {e}\n  Uso il CSV esistente.\n")
+        return
+    scrivi_csv(df, CSV)
+    print(f"[--fetch] scaricati {len(df)} annunci reali Idealista.\n")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--mq", type=float, required=True, help="superficie in mq")
@@ -22,7 +39,12 @@ def main():
                    help="distanza dal mare in km")
     p.add_argument("--ascensore", action="store_true")
     p.add_argument("--garage", action="store_true")
+    p.add_argument("--fetch", action="store_true",
+                   help="aggiorna gli annunci dall'API Idealista prima di stimare")
     args = p.parse_args()
+
+    if args.fetch:
+        _aggiorna_da_idealista()
 
     modello = addestra(verbose=True)
     stima, lo, hi = modello.stima(args.mq, args.stato, args.distanza_mare,
