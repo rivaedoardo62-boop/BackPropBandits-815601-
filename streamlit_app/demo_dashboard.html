@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Airport Risk Intelligence — Multi-Agent Console</title>
+<style>
+  /* ─────────────────────────────  RESET  ───────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  h1, h2, h3, p, ul, figure { margin: 0; }
+
+  /* ─────────────────────────────  TOKENS  ──────────────────────────── */
+  :root {
+    color-scheme: light;
+    --bg:        #f4f5f7;
+    --surface:   #ffffff;
+    --surface-2: #f7f8fa;
+    --ink:       #0e1116;
+    --ink-2:     #4a4f57;
+    --muted:     #7c828c;
+    --grid:      #e4e6ea;
+    --border:    rgba(14,17,22,0.10);
+    --border-2:  rgba(14,17,22,0.06);
+    --accent:    #2a78d6;
+    --accent-2:  #1c5cab;
+    --accent-wash: rgba(42,120,214,0.08);
+    --shadow:    0 1px 2px rgba(14,17,22,0.05), 0 8px 24px rgba(14,17,22,0.06);
+    --shadow-sm: 0 1px 2px rgba(14,17,22,0.06);
+
+    /* risk / status — fixed, never themed */
+    --critical:  #d03b3b;
+    --high:      #ec835a;
+    --medium:    #fab219;
+    --low:       #0ca30c;
+    --normal:    #8a9099;
+
+    /* agent identity — matches the project's agent_graph.jsx */
+    --ag-data:       #0ea5e9;
+    --ag-baseline:   #f59e0b;
+    --ag-outlier:    #ef4444;
+    --ag-risk:       #ec4899;
+    --ag-report:     #a855f7;
+    --ag-supervisor: #14b8a6;
+
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg:        #0b0d10;
+      --surface:   #14171c;
+      --surface-2: #1a1e24;
+      --ink:       #f3f5f8;
+      --ink-2:     #b7bcc5;
+      --muted:     #7f858f;
+      --grid:      #262b32;
+      --border:    rgba(255,255,255,0.10);
+      --border-2:  rgba(255,255,255,0.05);
+      --accent:    #3987e5;
+      --accent-2:  #5598e7;
+      --accent-wash: rgba(57,135,229,0.12);
+      --shadow:    0 1px 2px rgba(0,0,0,0.4), 0 12px 30px rgba(0,0,0,0.35);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:        #0b0d10;
+    --surface:   #14171c;
+    --surface-2: #1a1e24;
+    --ink:       #f3f5f8;
+    --ink-2:     #b7bcc5;
+    --muted:     #7f858f;
+    --grid:      #262b32;
+    --border:    rgba(255,255,255,0.10);
+    --border-2:  rgba(255,255,255,0.05);
+    --accent:    #3987e5;
+    --accent-2:  #5598e7;
+    --accent-wash: rgba(57,135,229,0.12);
+    --shadow:    0 1px 2px rgba(0,0,0,0.4), 0 12px 30px rgba(0,0,0,0.35);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  /* ─────────────────────────────  BASE  ────────────────────────────── */
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 72px; }
+  .mono { font-family: var(--mono); }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .tnum { font-variant-numeric: tabular-nums; }
+  ::selection { background: var(--accent-wash); }
+
+  /* ─────────────────────────────  HEADER  ──────────────────────────── */
+  header.bar {
+    position: sticky; top: 0; z-index: 40;
+    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar-inner {
+    max-width: 1180px; margin: 0 auto; padding: 12px 20px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: 10px; flex: none;
+    background: linear-gradient(145deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; box-shadow: var(--shadow-sm);
+  }
+  .brand-mark svg { width: 22px; height: 22px; }
+  .brand-name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; }
+  .brand-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+  .bar-status {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-2);
+    padding: 5px 11px; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--low); box-shadow: 0 0 0 3px color-mix(in srgb, var(--low) 22%, transparent); }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    display: grid; place-items: center; color: var(--ink-2);
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .icon-btn:hover { color: var(--ink); border-color: var(--accent); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .sun { display: none; } .moon { display: block; }
+  :root[data-theme="dark"] .sun { display: block; } :root[data-theme="dark"] .moon { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .sun { display: block; }
+    :root:not([data-theme="light"]) .moon { display: none; }
+  }
+
+  /* ─────────────────────────────  HERO INTRO  ──────────────────────── */
+  .intro { padding: 40px 0 22px; }
+  .intro h1 {
+    font-size: clamp(28px, 4.4vw, 44px); font-weight: 780;
+    letter-spacing: -0.025em; line-height: 1.05; text-wrap: balance;
+    max-width: 20ch;
+  }
+  .intro p { margin-top: 16px; color: var(--ink-2); font-size: 16.5px; max-width: 64ch; }
+  .intro .tag { color: var(--accent); font-weight: 600; }
+
+  /* ─────────────────────────────  KPI ROW  ─────────────────────────── */
+  .kpis {
+    display: grid; gap: 14px; margin-top: 26px;
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 16px 14px; box-shadow: var(--shadow-sm);
+    position: relative; overflow: hidden;
+  }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); opacity: .55; }
+  .kpi.k-crit::before { background: var(--critical); }
+  .kpi.k-high::before { background: var(--high); }
+  .kpi.k-ok::before   { background: var(--low); }
+  .kpi-label { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .kpi-val { font-size: 30px; font-weight: 760; letter-spacing: -0.02em; margin-top: 8px; line-height: 1; }
+  .kpi-val small { font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+  .kpi-note { font-size: 12px; color: var(--ink-2); margin-top: 7px; }
+
+  /* ─────────────────────────────  SECTION  ─────────────────────────── */
+  section { margin-top: 40px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sec-head h2 { font-size: 20px; font-weight: 720; letter-spacing: -0.015em; }
+  .sec-head .eyebrow { margin-left: auto; }
+  .sec-desc { color: var(--ink-2); font-size: 14.5px; max-width: 72ch; margin: -6px 0 18px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px;
+  }
+
+  /* ─────────────────────────────  PIPELINE  ────────────────────────── */
+  .pipe-top { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .run-btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: linear-gradient(145deg, var(--accent), var(--accent-2));
+    color: #fff; border: none; border-radius: 10px; padding: 10px 18px;
+    font-weight: 640; font-size: 14px; box-shadow: var(--shadow-sm);
+    transition: transform .12s, box-shadow .12s, filter .12s;
+  }
+  .run-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .run-btn:active { transform: translateY(0); }
+  .run-btn:disabled { filter: grayscale(.4) opacity(.6); cursor: progress; transform: none; }
+  .run-btn svg { width: 16px; height: 16px; }
+  .perimeter { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+  .perimeter select {
+    font: inherit; font-family: var(--mono); color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 9px;
+  }
+  .runtime { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .graph { display: grid; grid-template-columns: 1.55fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .graph { grid-template-columns: 1fr; } }
+
+  .flow { position: relative; }
+  .flow-row { display: flex; flex-direction: column; gap: 12px; }
+  .node {
+    --c: var(--accent);
+    display: grid; grid-template-columns: 46px 1fr auto; gap: 14px; align-items: center;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; position: relative;
+    transition: border-color .25s, box-shadow .25s, background .25s, transform .25s;
+  }
+  .node .node-ic {
+    width: 46px; height: 46px; border-radius: 11px; flex: none;
+    display: grid; place-items: center;
+    background: color-mix(in srgb, var(--c) 15%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
+    color: var(--c);
+  }
+  .node .node-ic svg { width: 24px; height: 24px; }
+  .node-title { font-weight: 660; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+  .node-file { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .node-tag {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .08em; font-weight: 700;
+    padding: 2px 6px; border-radius: 5px; text-transform: uppercase;
+    background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c);
+  }
+  .node-num {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    width: 22px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  .node[data-state="active"] {
+    --glow: color-mix(in srgb, var(--c) 55%, transparent);
+    border-color: var(--c); background: color-mix(in srgb, var(--c) 8%, var(--surface));
+    box-shadow: 0 0 0 1px var(--c), 0 0 22px -4px var(--glow);
+    transform: translateX(3px);
+  }
+  .node[data-state="done"] { border-color: color-mix(in srgb, var(--c) 40%, var(--border)); }
+  .node[data-state="done"] .check { opacity: 1; transform: scale(1); }
+  .check {
+    width: 20px; height: 20px; border-radius: 50%; flex: none;
+    background: var(--low); display: grid; place-items: center; color: #fff;
+    opacity: 0; transform: scale(.4); transition: opacity .2s, transform .2s;
+  }
+  .check svg { width: 12px; height: 12px; }
+  .node-right { display: flex; align-items: center; gap: 8px; }
+
+  .connector { display: flex; align-items: center; justify-content: flex-start; padding-left: 22px; height: 20px; }
+  .connector .line { width: 2px; height: 100%; background: var(--grid); border-radius: 2px; position: relative; overflow: hidden; }
+  .connector .line.lit::after {
+    content: ""; position: absolute; left: 0; right: 0; top: -40%; height: 40%;
+    background: linear-gradient(var(--accent), transparent); animation: flow 0.7s linear infinite;
+  }
+  @keyframes flow { to { top: 110%; } }
+  .connector.branch { padding-left: 22px; }
+  .branch-label {
+    font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+    margin-left: 12px; padding: 2px 8px; border: 1px dashed var(--border);
+    border-radius: 6px; background: var(--surface);
+  }
+  .branch-label b { color: var(--accent); font-weight: 700; }
+
+  /* verifier badge on supervisor */
+  .verifier-wrap { margin-left: 22px; padding-left: 22px; border-left: 2px dashed color-mix(in srgb, var(--ag-supervisor) 45%, var(--border)); margin-top: 4px; }
+
+  /* console log panel */
+  .console {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 0; display: flex; flex-direction: column; height: 100%; min-height: 320px; overflow: hidden;
+  }
+  .console-head {
+    display: flex; align-items: center; gap: 8px; padding: 11px 14px;
+    border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+  }
+  .console-head .tl { display: flex; gap: 6px; margin-right: 6px; }
+  .console-head .tl i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+  .log {
+    flex: 1; overflow-y: auto; padding: 12px 14px; margin: 0;
+    font-family: var(--mono); font-size: 12px; line-height: 1.75; color: var(--ink-2);
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .log .ln { display: flex; gap: 9px; opacity: 0; transform: translateY(3px); animation: logln .3s forwards; }
+  @keyframes logln { to { opacity: 1; transform: none; } }
+  .log .t { color: var(--muted); flex: none; }
+  .log .m b { color: var(--ink); font-weight: 600; }
+  .log .m.ok b { color: var(--low); }
+  .log .m.branch b { color: var(--accent); }
+  .log .m.llm b { color: var(--ag-report); }
+  .log-empty { color: var(--muted); font-style: italic; }
+
+  /* ─────────────────────────────  CHART GRID  ──────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 20px; }
+  @media (max-width: 860px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .card h3 { font-size: 15px; font-weight: 680; letter-spacing: -0.01em; }
+  .card .sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; margin-bottom: 16px; }
+
+  /* proportion / bar rows */
+  .bars { display: flex; flex-direction: column; gap: 13px; margin-top: 4px; }
+  .bar-row { display: grid; grid-template-columns: 128px 1fr 64px; align-items: center; gap: 12px; }
+  .bar-lab { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .bar-lab .swatch { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  .bar-track { height: 22px; background: var(--surface-2); border-radius: 6px; position: relative; overflow: hidden; border: 1px solid var(--border-2); }
+  .bar-fill { height: 100%; border-radius: 5px 4px 4px 5px; width: 0; transition: width .9s cubic-bezier(.22,.61,.36,1); }
+  .bar-val { font-family: var(--mono); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .bar-val small { color: var(--muted); font-size: 11px; }
+
+  /* stacked proportion bar */
+  .stack {
+    display: flex; height: 30px; border-radius: 8px; overflow: hidden; margin-top: 6px;
+    border: 1px solid var(--border-2); gap: 2px; background: var(--border-2);
+  }
+  .stack > span { display: block; height: 100%; position: relative; transition: flex-grow .9s cubic-bezier(.22,.61,.36,1); }
+  .stack > span:first-child { border-radius: 7px 0 0 7px; } .stack > span:last-child { border-radius: 0 7px 7px 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
+  .legend .li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); }
+  .legend .li .swatch { width: 11px; height: 11px; border-radius: 3px; }
+  .legend .li b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* agreement / confusion */
+  .agree { display: flex; align-items: center; justify-content: center; gap: 26px; padding: 8px 0 4px; flex-wrap: wrap; }
+  .ring { position: relative; width: 128px; height: 128px; flex: none; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .rt { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .ring .rt b { font-size: 26px; font-weight: 760; letter-spacing: -0.02em; }
+  .ring .rt span { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .agree-list { font-size: 13px; color: var(--ink-2); display: flex; flex-direction: column; gap: 9px; }
+  .agree-list .r { display: flex; align-items: center; gap: 9px; }
+  .agree-list .r .mono { color: var(--ink); }
+  .agree-list .r svg { width: 15px; height: 15px; color: var(--low); flex: none; }
+
+  /* ─────────────────────────────  ROUTES TABLE  ────────────────────── */
+  .routes { overflow-x: auto; }
+  table.rt { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+  table.rt thead th {
+    text-align: left; font-family: var(--mono); font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 0 12px 10px; border-bottom: 1px solid var(--border);
+  }
+  table.rt thead th.num, table.rt tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.rt tbody td { padding: 12px; border-bottom: 1px solid var(--border-2); vertical-align: middle; }
+  table.rt tbody tr.route-row { cursor: pointer; transition: background .12s; }
+  table.rt tbody tr.route-row:hover { background: var(--surface-2); }
+  .route-code { font-family: var(--mono); font-weight: 640; letter-spacing: .02em; }
+  .route-city { color: var(--muted); font-size: 12px; margin-top: 1px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono);
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .pill.critical { color: var(--critical); background: color-mix(in srgb, var(--critical) 13%, transparent); }
+  .pill.high     { color: var(--high);     background: color-mix(in srgb, var(--high) 16%, transparent); }
+  .pill.medium   { color: #a9740a;         background: color-mix(in srgb, var(--medium) 20%, transparent); }
+  :root[data-theme="dark"] .pill.medium, .pill.medium { }
+  .scorebar { display: flex; align-items: center; gap: 9px; justify-content: flex-end; }
+  .scorebar .track { width: 74px; height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; border: 1px solid var(--border-2); }
+  .scorebar .fill { height: 100%; border-radius: 4px; }
+  .chev { width: 15px; height: 15px; color: var(--muted); transition: transform .2s; }
+  tr.route-row[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  tr.detail td { padding: 0 12px; border: none; }
+  .detail-inner {
+    display: grid; grid-template-columns: 1fr; gap: 0; overflow: hidden;
+    max-height: 0; transition: max-height .3s ease;
+  }
+  tr.detail.open .detail-inner { max-height: 340px; }
+  .narr {
+    background: var(--surface-2); border: 1px solid var(--border); border-left: 3px solid var(--ag-report);
+    border-radius: 10px; padding: 15px 17px; margin: 4px 0 16px;
+  }
+  .narr .nh { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+  .narr .nh .badge {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; font-weight: 700;
+    color: var(--ag-report); background: color-mix(in srgb, var(--ag-report) 14%, transparent);
+    padding: 3px 8px; border-radius: 6px;
+  }
+  .narr .nh .backend { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .narr p { font-size: 13.5px; color: var(--ink); line-height: 1.62; }
+  .narr .drivers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .narr .chip {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 4px 9px;
+  }
+  .narr .chip b { color: var(--ink); }
+  .table-note { font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+  /* ─────────────────────────────  COMPARISON  ──────────────────────── */
+  .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  @media (max-width: 720px) { .cmp { grid-template-columns: 1fr; } }
+  .cmp-col { padding: 4px 24px; }
+  .cmp-col:first-child { border-right: 1px solid var(--border); }
+  @media (max-width: 720px) { .cmp-col:first-child { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 22px; margin-bottom: 4px; } }
+  .cmp-col h4 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+  .cmp-col h4 .tagx { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 6px; letter-spacing: .05em; }
+  .tag-classic { background: color-mix(in srgb, var(--normal) 18%, transparent); color: var(--ink-2); }
+  .tag-ma { background: var(--accent-wash); color: var(--accent); }
+  .feat { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 13px; color: var(--ink-2); }
+  .feat svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+  .feat.yes svg { color: var(--low); } .feat.no svg { color: var(--muted); }
+  .feat b { color: var(--ink); font-weight: 600; }
+
+  /* weights mini */
+  .wts { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .wrow { display: grid; grid-template-columns: 130px 1fr 44px; align-items: center; gap: 12px; font-size: 13px; }
+  .wrow .wt-track { height: 9px; background: var(--surface-2); border-radius: 5px; overflow: hidden; border: 1px solid var(--border-2); }
+  .wrow .wt-fill { height: 100%; border-radius: 5px; background: var(--accent); }
+  .wrow .wv { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .wrow .wn { display: flex; align-items: center; gap: 8px; }
+  .wrow .wn small { color: var(--muted); font-size: 11px; }
+
+  /* rules */
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .rules { grid-template-columns: 1fr; } }
+  .rule { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; }
+  .rule .rid { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 640; }
+  .rule .rcond { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); margin: 6px 0; word-break: break-word; }
+  .rule .rint { font-size: 12.5px; color: var(--muted); }
+
+  /* tooltip */
+  .tt {
+    position: fixed; z-index: 90; pointer-events: none; opacity: 0; transform: translateY(4px);
+    transition: opacity .12s; background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 11.5px; padding: 6px 9px; border-radius: 7px;
+    box-shadow: var(--shadow); white-space: nowrap;
+  }
+  .tt.on { opacity: 1; transform: none; }
+
+  footer { margin-top: 52px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12.5px; }
+  footer .mono { color: var(--ink-2); }
+  a.link { color: var(--accent); text-decoration: none; } a.link:hover { text-decoration: underline; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════  HEADER  ══════════════════════════ -->
+<header class="bar">
+  <div class="bar-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M2 12l19-8-8 19-2.5-8.5L2 12z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" fill="rgba(255,255,255,.15)"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Airport Risk Intelligence</div>
+        <div class="brand-sub">multi-agent console · demo</div>
+      </div>
+    </div>
+    <div class="bar-status"><span class="dot"></span> LangGraph DAG · 5 agents + verifier</div>
+    <button class="icon-btn" id="theme" aria-label="Toggle colour theme" title="Toggle theme">
+      <svg class="moon" viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ════════════════════════════  INTRO  ═══════════════════════════ -->
+  <div class="intro">
+    <div class="eyebrow">Reply × LUISS 2026 · Project 2 — Classical vs Multi-Agent</div>
+    <h1>Border-control anomaly detection, run as a five-agent graph.</h1>
+    <p>
+      A LangGraph orchestration screens <span class="tag">567 Italian border-control routes</span> for anomalous
+      patterns, blending a four-model ML ensemble with five operational business rules and an LLM narration layer.
+      This demo reproduces the pipeline's real outputs — no protected data or API keys required.
+    </p>
+  </div>
+
+  <!-- ════════════════════════════  KPI ROW  ═════════════════════════ -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Routes analysed</div>
+      <div class="kpi-val tnum">567</div>
+      <div class="kpi-note">54 features · perimeter <span class="mono">anno = 2024</span></div>
+    </div>
+    <div class="kpi k-high">
+      <div class="kpi-label">Anomalous</div>
+      <div class="kpi-val tnum">57 <small>/ 567</small></div>
+      <div class="kpi-note">17 HIGH · 40 MEDIUM</div>
+    </div>
+    <div class="kpi k-crit">
+      <div class="kpi-label">Critical risk</div>
+      <div class="kpi-val tnum">9</div>
+      <div class="kpi-note">post-rule · +29 HIGH tier</div>
+    </div>
+    <div class="kpi k-ok">
+      <div class="kpi-label">Pipeline agreement</div>
+      <div class="kpi-val tnum">100<small>%</small></div>
+      <div class="kpi-note">567 / 567 vs classical</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Agents</div>
+      <div class="kpi-val tnum">5<small> + 1</small></div>
+      <div class="kpi-note">4 data-driven branches</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════  PIPELINE  ════════════════════════ -->
+  <section id="pipeline">
+    <div class="sec-head">
+      <h2>Multi-agent pipeline</h2>
+      <div class="eyebrow">LangGraph DAG</div>
+    </div>
+    <p class="sec-desc">
+      Five specialised agents pass a shared state through the graph. Conditional edges branch on the data itself —
+      an early exit on degenerate perimeters, a verifier that can cycle the ensemble, and a report step that only
+      fires when there is something worth narrating. Press <b>Run pipeline</b> to walk a live invocation.
+    </p>
+
+    <div class="card">
+      <div class="pipe-top">
+        <button class="run-btn" id="run">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 5l12 7-12 7V5z" fill="#fff"/></svg>
+          Run pipeline
+        </button>
+        <span class="perimeter">
+          perimeter
+          <select id="perimeter" aria-label="Analysis perimeter">
+            <option value="full">anno = 2024 · all airports (567 routes)</option>
+            <option value="fco">arrival = FCO · Rome Fiumicino</option>
+            <option value="mxp">arrival = MXP · Milan Malpensa</option>
+          </select>
+        </span>
+        <span class="runtime" id="runtime">idle</span>
+      </div>
+
+      <div class="graph">
+        <!-- flow -->
+        <div class="flow">
+          <div class="flow-row" id="flow"></div>
+        </div>
+        <!-- console -->
+        <div class="console">
+          <div class="console-head">
+            <span class="tl"><i style="background:#ef4444"></i><i style="background:#fab219"></i><i style="background:#0ca30c"></i></span>
+            orchestrator · run_pipeline()
+          </div>
+          <div class="log" id="log"><div class="log-empty">Awaiting invocation — press “Run pipeline”.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════  RESULTS  ═════════════════════════ -->
+  <section id="results">
+    <div class="sec-head">
+      <h2>Detection results</h2>
+      <div class="eyebrow">567-route population</div>
+    </div>
+
+    <div class="grid-3">
+      <!-- anomaly label distribution -->
+      <div class="card" id="card-anom">
+        <h3>Anomaly labels</h3>
+        <div class="sub">Ensemble score vs data-driven thresholds (p97 / p90)</div>
+        <div class="stack" id="stack-anom"></div>
+        <div class="legend" id="legend-anom"></div>
+      </div>
+
+      <!-- final risk -->
+      <div class="card">
+        <h3>Final risk tiers</h3>
+        <div class="sub">After the five business rules · 0.6·ML + 0.4·rules</div>
+        <div class="bars" id="bars-risk"></div>
+      </div>
+
+      <!-- agreement ring -->
+      <div class="card">
+        <h3>Classical agreement</h3>
+        <div class="sub">Per-route label match, both layers</div>
+        <div class="agree">
+          <div class="ring">
+            <svg width="128" height="128" viewBox="0 0 128 128">
+              <circle cx="64" cy="64" r="54" fill="none" stroke="var(--grid)" stroke-width="12"/>
+              <circle id="ring-arc" cx="64" cy="64" r="54" fill="none" stroke="var(--low)" stroke-width="12"
+                      stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"
+                      style="transition: stroke-dashoffset 1.1s cubic-bezier(.22,.61,.36,1);"/>
+            </svg>
+            <div class="rt"><b class="tnum">100%</b><span>match</span></div>
+          </div>
+          <div class="agree-list">
+            <div class="r"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span><span class="mono">567/567</span> anomaly label</span></div>
+            <div class="r"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span><span class="mono">567/567</span> final risk</span></div>
+            <div class="r"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span><span class="mono">50/50</span> top-anomaly overlap</span></div>
+            <div class="r"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Pearson r ≈ <span class="mono">1.0</span> on score</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════  TOP ROUTES  ══════════════════════ -->
+  <section id="routes">
+    <div class="sec-head">
+      <h2>Top anomalous routes</h2>
+      <div class="eyebrow">Ranked by ensemble score</div>
+    </div>
+    <p class="sec-desc">The five highest-scoring routes, all above the p97 HIGH threshold. Select a row to read the
+      <b>ReportAgent</b> narration — figures are drawn from each route's own z-score drivers and fired rules.</p>
+
+    <div class="card">
+      <div class="routes">
+        <table class="rt">
+          <thead>
+            <tr>
+              <th style="width:26px"></th>
+              <th>Route</th>
+              <th>Corridor</th>
+              <th>Anomaly</th>
+              <th class="num">Ensemble score</th>
+              <th style="width:20px"></th>
+            </tr>
+          </thead>
+          <tbody id="routes-body"></tbody>
+        </table>
+      </div>
+      <p class="table-note">Ensemble score ∈ [0, 1]. Max on this dataset is <span class="mono">0.813</span> (CMN-BLQ).
+        Narrations are representative of the ReportAgent output format; every value it may cite is injected
+        deterministically and copied verbatim.</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════  ENGINE  ══════════════════════════ -->
+  <section id="engine">
+    <div class="sec-head">
+      <h2>Under the hood</h2>
+      <div class="eyebrow">Ensemble · rules · verifier</div>
+    </div>
+
+    <div class="grid-2">
+      <!-- weights -->
+      <div class="card">
+        <h3>Ensemble weights</h3>
+        <div class="sub">Four detectors · data-driven blend (ablation + simplex grid)</div>
+        <div class="wts" id="wts"></div>
+        <p class="table-note">Weights validated against a 969-vector grid over the 4-simplex; the production blend sits in
+          the top ~8%. The Autoencoder (13→8→4→8→13) is deterministic, trained on the 510 normal routes.</p>
+      </div>
+
+      <!-- business rules -->
+      <div class="card">
+        <h3>Five business rules</h3>
+        <div class="sub">Operational checks · <span class="mono">br_score = mean(br_*)</span></div>
+        <div class="rules" id="rules"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════  COMPARISON  ══════════════════════ -->
+  <section id="compare">
+    <div class="sec-head">
+      <h2>Why multi-agent</h2>
+      <div class="eyebrow">Same labels · different operations</div>
+    </div>
+    <p class="sec-desc">Both pipelines produce identical labels on all 567 routes — the ML verdict is the same. What the
+      graph adds is operational, the properties a flat script does not provide without a rewrite.</p>
+
+    <div class="card">
+      <div class="cmp">
+        <div class="cmp-col">
+          <h4>Classical pipeline <span class="tagx tag-classic">sequential</span></h4>
+          <div class="feat yes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Same <b>17/40/510</b> anomaly split, same <b>9 CRITICAL</b></span></div>
+          <div class="feat yes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Seven inlined steps, readable top-to-bottom</span></div>
+          <div class="feat no"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Ends at a ranked CSV — <b>no narration</b></span></div>
+          <div class="feat no"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Runs once — <b>no self-correction</b></span></div>
+          <div class="feat no"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Static perimeter, coupled failure surface</span></div>
+        </div>
+        <div class="cmp-col">
+          <h4>Multi-agent graph <span class="tagx tag-ma">LangGraph</span></h4>
+          <div class="feat yes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>LLM narration</b> per HIGH/MEDIUM route, faithful by construction</span></div>
+          <div class="feat yes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Verifier feedback cycle</b> — refits IF at contamination 0.03</span></div>
+          <div class="feat yes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Per-agent failure isolation</b> — partial state surfaced to the UI</span></div>
+          <div class="feat yes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Dynamic perimeter</b> — analyst restricts the run at runtime</span></div>
+          <div class="feat yes"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Pluggable backend — <b>Claude</b>, local model, or none</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><span class="mono">Airport Risk Intelligence</span> — demo dashboard for the multi-agent pipeline.
+    Figures reproduced from the project report; the analysis runs on NDA-protected border-control data not
+    redistributed here. Team: Daniele Giovanardi · Filippo Nannucci · Edoardo Riva.</p>
+  </footer>
+</div>
+
+<div class="tt" id="tooltip"></div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ───────────────  THEME TOGGLE  ─────────────── */
+  const root = document.documentElement;
+  $("#theme").addEventListener("click", () => {
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    const cur = root.getAttribute("data-theme") || (dark ? "dark" : "light");
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+  });
+
+  /* ───────────────  DATA  ─────────────── */
+  const AGENTS = [
+    { id:"data",     n:"DataAgent",         file:"data_agent.py",         c:"var(--ag-data)",       tag:"DETERMINISTIC",
+      icon:'<svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6" rx="8" ry="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" stroke="currentColor" stroke-width="1.6"/></svg>',
+      log:["load ALLARMI.csv + TIPOLOGIA_VIAGGIATORE.csv","apply perimeter → filter records","FeatureBuilder → 567 routes × 54 features"] },
+    { id:"baseline", n:"BaselineAgent",     file:"baseline_agent.py",     c:"var(--ag-baseline)",   tag:"DETERMINISTIC",
+      icon:'<svg viewBox="0 0 24 24" fill="none"><path d="M2 19q4 0 6-3t3-11q1 8 3 11t6 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M11 3v17" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2" opacity=".6"/></svg>',
+      log:["robust MAD z-score · 13 baseline features","aggregate → baseline_score"] },
+    { id:"outlier",  n:"OutlierAgent",      file:"outlier_agent.py",      c:"var(--ag-outlier)",    tag:"DETERMINISTIC",
+      icon:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="13" r="1.4" fill="currentColor" opacity=".45"/><circle cx="12" cy="11" r="1.4" fill="currentColor" opacity=".45"/><circle cx="10" cy="16" r="1.4" fill="currentColor" opacity=".45"/><circle cx="14" cy="14" r="1.4" fill="currentColor" opacity=".45"/><circle cx="19" cy="5" r="2" fill="currentColor"/><ellipse cx="11" cy="13" rx="7" ry="5" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 2" opacity=".5"/></svg>',
+      log:["4-model ensemble · IF + LOF + Z + AE","thresholds p97 = 0.358 · p90 = 0.290","→ 17 HIGH · 40 MEDIUM · 510 NORMAL"] },
+    { id:"risk",     n:"RiskProfilingAgent",file:"risk_profiling_agent.py",c:"var(--ag-risk)",      tag:"DETERMINISTIC",
+      icon:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 4-3.5 7.5-8 9-4.5-1.5-8-5-8-9V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 12l2.2 2.2L16 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      log:["5 business rules → br_score","confidence = 0.6·ML + 0.4·rules","→ 9 CRITICAL · 29 HIGH · 19 MEDIUM · 510 LOW"] },
+    { id:"report",   n:"ReportAgent",       file:"report_agent.py",       c:"var(--ag-report)",     tag:"LLM-POWERED",
+      icon:'<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 8h6M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M17 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="currentColor" opacity=".8"/></svg>',
+      log:["gate on final_risk ∈ {CRITICAL, HIGH}","narrate 38 routes → ~23 patterns","backend = anthropic · faithful by construction"] },
+  ];
+  const SUPERVISOR = { id:"supervisor", n:"SupervisorAgent", file:"supervisor_agent.py", c:"var(--ag-supervisor)", tag:"VERIFIER",
+    icon:'<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 11l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    log:["re-fit IsolationForest · contamination = 0.03","tag robust_high · downgrade_rate = 0% → proceed"] };
+
+  const ANOM = [
+    { k:"HIGH",   v:17,  c:"var(--high)" },
+    { k:"MEDIUM", v:40,  c:"var(--medium)" },
+    { k:"NORMAL", v:510, c:"var(--normal)" },
+  ];
+  const RISK = [
+    { k:"CRITICAL", v:9,   c:"var(--critical)" },
+    { k:"HIGH",     v:29,  c:"var(--high)" },
+    { k:"MEDIUM",   v:19,  c:"var(--medium)" },
+    { k:"LOW",      v:510, c:"var(--low)" },
+  ];
+  const WEIGHTS = [
+    { k:"IsolationForest", s:"IF · strongest ranker", v:0.40 },
+    { k:"Z-score (MAD)",   s:"Z · most rule-aligned", v:0.30 },
+    { k:"Local Outlier F.",s:"LOF · density signal",  v:0.15 },
+    { k:"Autoencoder",     s:"AE · non-linear cover", v:0.15 },
+  ];
+  const RULES = [
+    { id:"br_high_interpol",  cond:"pct_interpol ≥ 0.30",                       int:"INTERPOL alarms dominate the route" },
+    { id:"br_high_rejection", cond:"tasso_respinti ≥ 0.25",                     int:"Above-average traveller rejection" },
+    { id:"br_low_closure",    cond:"tot_allarmi_log > 3 ∧ tasso_chiusura < 0.10", int:"High alarm volume, low closure — backlog" },
+    { id:"br_multi_source",   cond:"pct_interpol ≥ 0.10 ∧ pct_sdi ≥ 0.10",      int:"Multi-database corroboration · fires on 152 routes" },
+    { id:"br_high_alarm_rate",cond:"tasso_allarme_medio ≥ 0.50",               int:"One traveller in two triggers an alarm" },
+  ];
+  const ROUTES = [
+    { code:"CMN-BLQ", city:"Casablanca → Bologna", score:0.813, label:"CRITICAL",
+      narr:"CMN-BLQ scores 0.813 on the ensemble, the highest route in the population and comfortably above the p97 HIGH threshold of 0.358. Its alarm volume runs 4.1σ above the population median while the closure rate stays under 0.10, so the low-closure rule fires alongside a multi-source INTERPOL/SDI corroboration. The route is classified CRITICAL.",
+      drivers:["tot_allarmi_log +4.1σ","tasso_chiusura 0.07","pct_interpol 0.34","br_low_closure","br_multi_source"] },
+    { code:"SIN-MXP", city:"Singapore → Milan Malpensa", score:0.669, label:"HIGH",
+      narr:"SIN-MXP scores 0.669, driven mainly by an INTERPOL share of 0.31 that clears the high-INTERPOL rule and a rejection rate of 0.27 above the border average. The Isolation Forest and Z-score detectors agree on the route as an outlier; the ensemble labels it HIGH.",
+      drivers:["pct_interpol 0.31","tasso_respinti 0.27","IF outlier","br_high_interpol"] },
+    { code:"ALG-MXP", city:"Algiers → Milan Malpensa", score:0.659, label:"HIGH",
+      narr:"ALG-MXP scores 0.659. A mean alarm rate of 0.54 trips the high-alarm-rate rule — roughly one traveller in two on this route triggers an alarm — combined with multi-source presence across INTERPOL and SDI. Labelled HIGH.",
+      drivers:["tasso_allarme_medio 0.54","pct_sdi 0.19","br_high_alarm_rate","br_multi_source"] },
+    { code:"PVG-MXP", city:"Shanghai → Milan Malpensa", score:0.611, label:"HIGH",
+      narr:"PVG-MXP scores 0.611. The Autoencoder reconstruction error is high — a non-linear combination the other detectors weight less — and the rejection rate of 0.26 clears the high-rejection rule. Labelled HIGH.",
+      drivers:["AE recon. error high","tasso_respinti 0.26","br_high_rejection"] },
+    { code:"RMO-MXP", city:"Chișinău → Milan Malpensa", score:0.607, label:"HIGH",
+      narr:"RMO-MXP scores 0.607, just above the HIGH boundary. Its INTERPOL and SDI shares both exceed 0.10, triggering the multi-source rule, while the LOF density signal places it outside the normal cluster. Labelled HIGH.",
+      drivers:["pct_interpol 0.14","pct_sdi 0.12","LOF outlier","br_multi_source"] },
+  ];
+
+  /* ───────────────  BUILD: FLOW NODES  ─────────────── */
+  const flow = $("#flow");
+  function nodeEl(a, num) {
+    const el = document.createElement("div");
+    el.className = "node"; el.style.setProperty("--c", a.c); el.dataset.id = a.id; el.dataset.state = "idle";
+    el.innerHTML = `
+      <div class="node-ic">${a.icon}</div>
+      <div>
+        <div class="node-title">${a.n} <span class="node-tag">${a.tag}</span></div>
+        <div class="node-file">${a.file}</div>
+      </div>
+      <div class="node-right">
+        <div class="check"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="node-num">${num}</div>
+      </div>`;
+    return el;
+  }
+  function connector(id, label) {
+    const c = document.createElement("div");
+    c.className = "connector" + (label ? " branch" : "");
+    c.dataset.edge = id;
+    c.innerHTML = `<div class="line"></div>${label ? `<span class="branch-label">${label}</span>` : ""}`;
+    return c;
+  }
+  // data → baseline → [after_baseline] → outlier → [after_outlier ≥5 HIGH] → supervisor → [after_supervisor] → risk → [after_risk] → report
+  flow.appendChild(nodeEl(AGENTS[0], "01"));
+  flow.appendChild(connector("e1"));
+  flow.appendChild(nodeEl(AGENTS[1], "02"));
+  flow.appendChild(connector("e2", 'after_baseline · signal ok → <b>outlier</b>'));
+  flow.appendChild(nodeEl(AGENTS[2], "03"));
+  flow.appendChild(connector("e3", 'after_outlier · HIGH ≥ 5 → <b>supervisor</b>'));
+  flow.appendChild(nodeEl(SUPERVISOR, "★"));
+  flow.appendChild(connector("e4", 'after_supervisor · downgrade < 50% → <b>risk</b>'));
+  flow.appendChild(nodeEl(AGENTS[3], "04"));
+  flow.appendChild(connector("e5", 'after_risk · HIGH/MEDIUM present → <b>report</b>'));
+  flow.appendChild(nodeEl(AGENTS[4], "05"));
+
+  const ORDER = ["data","baseline","outlier","supervisor","risk","report"];
+  const ALLA = [...AGENTS, SUPERVISOR];
+  const edgesAfter = { data:"e1", baseline:"e2", outlier:"e3", supervisor:"e4", risk:"e5" };
+
+  /* ───────────────  RUN ANIMATION  ─────────────── */
+  const log = $("#log"), runtime = $("#runtime"), runBtn = $("#run");
+  let running = false;
+  const sleep = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 60) : ms));
+  const nodeById = id => flow.querySelector(`.node[data-id="${id}"]`);
+  const stamp = () => (perfBase += (30 + Math.random()*90), (perfBase/1000).toFixed(2).padStart(5,"0"));
+  let perfBase = 0;
+
+  function addLog(msg, cls="") {
+    if (log.querySelector(".log-empty")) log.innerHTML = "";
+    const ln = document.createElement("div");
+    ln.className = "ln";
+    ln.innerHTML = `<span class="t">${stamp()}s</span><span class="m ${cls}">${msg}</span>`;
+    log.appendChild(ln); log.scrollTop = log.scrollHeight;
+  }
+
+  async function run() {
+    if (running) return;
+    running = true; runBtn.disabled = true; perfBase = 0;
+    log.innerHTML = ""; runtime.textContent = "running…";
+    ALLA.forEach(a => { const n = nodeById(a.id); n.dataset.state = "idle"; });
+    $$(".connector .line").forEach(l => l.classList.remove("lit"));
+
+    const perim = $("#perimeter").value;
+    const perimLabel = perim === "full" ? "anno=2024" : perim === "fco" ? "aeroporto_arrivo=FCO" : "aeroporto_arrivo=MXP";
+    addLog(`orchestrator → <b>run_pipeline({${perimLabel}})</b>`);
+    await sleep(340);
+
+    for (const a of ALLA.slice().sort((x,y)=>ORDER.indexOf(x.id)-ORDER.indexOf(y.id))) {
+      const n = nodeById(a.id);
+      n.dataset.state = "active";
+      addLog(`▶ <b>${a.n}</b>`);
+      await sleep(reduce ? 60 : 420);
+      for (const line of a.log) { addLog(`&nbsp;&nbsp;${line}`); await sleep(reduce ? 30 : 220); }
+      // branch line
+      const edge = edgesAfter[a.id];
+      if (edge) {
+        const conn = flow.querySelector(`.connector[data-edge="${edge}"]`);
+        const lbl = conn && conn.querySelector(".branch-label");
+        if (lbl) addLog(`&nbsp;&nbsp;<b>${lbl.textContent.trim()}</b>`, "branch");
+        if (conn) { conn.querySelector(".line").classList.add("lit"); }
+      }
+      n.dataset.state = "done";
+      addLog(`✓ ${a.n} ok`, "ok");
+      await sleep(reduce ? 40 : 260);
+      if (edge) { const conn = flow.querySelector(`.connector[data-edge="${edge}"]`); if (conn) conn.querySelector(".line").classList.remove("lit"); }
+    }
+    addLog(`report saved → <b>multiagent_report.json</b>`, "llm");
+    addLog(`✓ pipeline completed · 6 stages`, "ok");
+    runtime.textContent = `done · ${perfBase.toFixed(2)}s`;
+    runBtn.disabled = false; running = false;
+  }
+  runBtn.addEventListener("click", run);
+
+  /* ───────────────  CHART: ANOMALY STACK  ─────────────── */
+  const total = 567;
+  const stack = $("#stack-anom"), legA = $("#legend-anom");
+  ANOM.forEach(d => {
+    const s = document.createElement("span");
+    s.style.background = d.c; s.style.flexGrow = "0"; s.dataset.k = d.k; s.dataset.v = d.v;
+    s.title = `${d.k}: ${d.v} routes (${(d.v/total*100).toFixed(1)}%)`;
+    tipify(s, () => `${d.k} · ${d.v} routes · ${(d.v/total*100).toFixed(1)}%`);
+    stack.appendChild(s);
+    const li = document.createElement("div");
+    li.className = "li";
+    li.innerHTML = `<span class="swatch" style="background:${d.c}"></span>${d.k} <b>${d.v}</b>`;
+    legA.appendChild(li);
+  });
+  function growStack() { $$("#stack-anom > span").forEach(s => s.style.flexGrow = String(+s.dataset.v)); }
+
+  /* ───────────────  CHART: RISK BARS  ─────────────── */
+  const barsRisk = $("#bars-risk");
+  const riskMax = Math.max(...RISK.map(d => d.v));
+  RISK.forEach(d => {
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML = `
+      <div class="bar-lab"><span class="swatch" style="background:${d.c}"></span>${d.k}</div>
+      <div class="bar-track"><div class="bar-fill" style="background:${d.c}"></div></div>
+      <div class="bar-val tnum">${d.v}<small> /567</small></div>`;
+    const fill = row.querySelector(".bar-fill");
+    fill.dataset.w = (d.v / riskMax * 100).toFixed(1);
+    tipify(row.querySelector(".bar-track"), () => `${d.k} · ${d.v} routes · ${(d.v/total*100).toFixed(1)}%`);
+    barsRisk.appendChild(row);
+  });
+  function growBars() { $$("#bars-risk .bar-fill").forEach(f => f.style.width = f.dataset.w + "%"); }
+
+  /* ───────────────  CHART: WEIGHTS  ─────────────── */
+  const wts = $("#wts");
+  const wMax = Math.max(...WEIGHTS.map(w => w.v));
+  WEIGHTS.forEach(w => {
+    const row = document.createElement("div");
+    row.className = "wrow";
+    row.innerHTML = `
+      <div class="wn">${w.k}<small>${w.s.split("·")[1]||""}</small></div>
+      <div class="wt-track"><div class="wt-fill" data-w="${(w.v/wMax*100).toFixed(0)}"></div></div>
+      <div class="wv">${w.v.toFixed(2)}</div>`;
+    wts.appendChild(row);
+  });
+  function growWts() { $$("#wts .wt-fill").forEach(f => f.style.width = f.dataset.w + "%"); }
+
+  /* ───────────────  RULES  ─────────────── */
+  const rulesEl = $("#rules");
+  RULES.forEach((r,i) => {
+    const el = document.createElement("div");
+    el.className = "rule";
+    el.innerHTML = `<div class="rid">${i+1} · ${r.id}</div><div class="rcond">${r.cond}</div><div class="rint">${r.int}</div>`;
+    rulesEl.appendChild(el);
+  });
+
+  /* ───────────────  ROUTES TABLE  ─────────────── */
+  const rb = $("#routes-body");
+  const riskClass = l => l.toLowerCase();
+  const riskColor = { CRITICAL:"var(--critical)", HIGH:"var(--high)", MEDIUM:"var(--medium)", LOW:"var(--low)" };
+  ROUTES.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    tr.className = "route-row"; tr.tabIndex = 0; tr.setAttribute("role","button"); tr.setAttribute("aria-expanded","false");
+    tr.innerHTML = `
+      <td class="num mono" style="color:var(--muted)">${i+1}</td>
+      <td><span class="route-code">${r.code}</span></td>
+      <td><span class="route-city">${r.city}</span></td>
+      <td><span class="pill ${riskClass(r.label)}">${r.label}</span></td>
+      <td class="num"><div class="scorebar"><div class="track"><div class="fill" style="width:${(r.score*100).toFixed(0)}%;background:${riskColor[r.label]}"></div></div><span class="mono">${r.score.toFixed(3)}</span></div></td>
+      <td><svg class="chev" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td>`;
+    const detail = document.createElement("tr");
+    detail.className = "detail";
+    detail.innerHTML = `<td colspan="6"><div class="detail-inner"><div class="narr">
+        <div class="nh"><span class="badge">ReportAgent narration</span><span class="backend">backend: anthropic · Claude</span></div>
+        <p>${r.narr}</p>
+        <div class="drivers">${r.drivers.map(d => `<span class="chip">${d}</span>`).join("")}</div>
+      </div></div></td>`;
+    const toggle = () => {
+      const open = detail.classList.toggle("open");
+      tr.setAttribute("aria-expanded", String(open));
+    };
+    tr.addEventListener("click", toggle);
+    tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    rb.appendChild(tr); rb.appendChild(detail);
+  });
+
+  /* ───────────────  TOOLTIP  ─────────────── */
+  const tt = $("#tooltip");
+  function tipify(el, txt) {
+    el.addEventListener("mousemove", e => {
+      tt.textContent = typeof txt === "function" ? txt() : txt;
+      tt.classList.add("on");
+      const pad = 12;
+      let x = e.clientX + pad, y = e.clientY + pad;
+      const w = tt.offsetWidth, h = tt.offsetHeight;
+      if (x + w > innerWidth) x = e.clientX - w - pad;
+      if (y + h > innerHeight) y = e.clientY - h - pad;
+      tt.style.left = x + "px"; tt.style.top = y + "px";
+    });
+    el.addEventListener("mouseleave", () => tt.classList.remove("on"));
+  }
+
+  /* ───────────────  AGREEMENT RING  ─────────────── */
+  const arc = $("#ring-arc");
+  const C = 2 * Math.PI * 54;
+  arc.style.strokeDasharray = C.toFixed(2);
+  arc.style.strokeDashoffset = C.toFixed(2);
+
+  /* ───────────────  REVEAL ON SCROLL  ─────────────── */
+  const io = new IntersectionObserver((ents) => {
+    ents.forEach(e => {
+      if (!e.isIntersecting) return;
+      const id = e.target.id;
+      if (id === "card-anom") growStack();
+      if (id === "results") { growBars(); arc.style.strokeDashoffset = "0"; }
+      if (id === "engine") growWts();
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.35 });
+  ["card-anom","results","engine"].forEach(id => { const el = $("#"+id); if (el) io.observe(el); });
+
+  // failsafe grow if already in view
+  setTimeout(() => { growStack(); growBars(); growWts(); arc.style.strokeDashoffset = "0"; }, 600);
+})();
+</script>
+</body>
+</html>
