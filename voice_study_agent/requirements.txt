@@ -1,0 +1,17 @@
+# Voice study agent — extra dependencies (in addition to the project's requirements.txt)
+
+# Document extraction
+pypdf>=4.0.0            # PDF
+python-pptx>=0.6.23     # PowerPoint slides
+python-docx>=1.1.0      # Word documents
+
+# LLM reordering (Claude) — direct Anthropic SDK
+anthropic>=0.39.0
+
+# Cloud premium voice (install the one you use)
+openai>=1.40.0          # OpenAI TTS (tts-1 / tts-1-hd)
+elevenlabs>=1.0.0       # ElevenLabs (optional alternative)
+
+# UI (already in the root requirements.txt, listed here for standalone use)
+streamlit>=1.28.0
+python-dotenv>=1.0.0
