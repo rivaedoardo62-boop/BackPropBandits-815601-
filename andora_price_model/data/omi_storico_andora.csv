@@ -1,0 +1,17 @@
+# Serie storica del valore medio OMI (eur/mq) per abitazioni civili, Andora zona B3 (litorale/Via Aurelia).
+# FONTE: ricostruzione APPROSSIMATIVA dal trend OMI/portali per il litorale di Andora:
+#   - mercato sostanzialmente piatto o in lieve calo 2016-2020
+#   - ripresa moderata 2021-2024
+#   coerente con i dati pubblici 2024-2026 (appartamenti: -4.6% su 4 anni per una fonte,
+#   +2.4% su 6 mesi per un'altra; media annunci ~3.300-3.900 eur/mq).
+# DA SOSTITUIRE con la serie semestrale OMI ufficiale scaricata dall'Agenzia delle Entrate.
+anno,valore_medio_eur_mq
+2016,2900
+2017,2840
+2018,2790
+2019,2760
+2020,2740
+2021,2790
+2022,2870
+2023,2960
+2024,3040

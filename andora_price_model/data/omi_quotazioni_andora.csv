@@ -1,0 +1,16 @@
+# Quotazioni OMI - Andora (SV), zona B3 "Litorale, Via Aurelia, Via Caprera, Via Vignetta" e zone limitrofe
+# FONTE: Osservatorio del Mercato Immobiliare (OMI) - Agenzia delle Entrate, valori trascritti a mano
+#        da fonti pubbliche che riportano le quotazioni OMI (borsinoimmobiliare.it, requot.com).
+# ATTENZIONE: valori APPROSSIMATIVI da verificare/sostituire con il download ufficiale OMI
+#             (https://www.agenziaentrate.gov.it -> OMI -> Quotazioni immobiliari, comune di Andora).
+# Le quotazioni OMI derivano da COMPRAVENDITE REALI (atti notarili), non da prezzi richiesti.
+# stato_conservazione: 1=da ristrutturare (scadente), 2=abitabile (normale), 3=buono (normale/ottimo), 4=ristrutturato (ottimo)
+zona_omi,descrizione,stato_conservazione,valore_min_eur_mq,valore_max_eur_mq,distanza_mare_km_tipica
+B3,"Litorale, Via Aurelia, Via Caprera, Via Vignetta",1,2300,2900,0.2
+B3,"Litorale, Via Aurelia, Via Caprera, Via Vignetta",2,2700,3400,0.2
+B3,"Litorale, Via Aurelia, Via Caprera, Via Vignetta",3,3200,4100,0.2
+B3,"Litorale, Via Aurelia, Via Caprera, Via Vignetta",4,3900,5200,0.2
+C1,"Zone semicentrali / prima collina (Molino, San Bartolomeo)",1,1500,1950,1.5
+C1,"Zone semicentrali / prima collina (Molino, San Bartolomeo)",2,1800,2300,1.5
+C1,"Zone semicentrali / prima collina (Molino, San Bartolomeo)",3,2100,2700,1.5
+C1,"Zone semicentrali / prima collina (Molino, San Bartolomeo)",4,2500,3100,1.5
