@@ -11,6 +11,44 @@ Modello in due parti **tenute separate**:
   crescita annua composta (pessimista / base / ottimista) ricavati dalla serie
   storica OMI della zona. L'output è una **forbice**, non un numero secco.
 
+## Modello ML + dashboard interattiva (Random Forest)
+
+In alternativa alla regressione lineare, `ml_pipeline.py` addestra un
+**Random Forest** (scikit-learn) sul prezzo di vendita, integrando due fonti
+come richiesto da un flusso da data scientist:
+
+1. **Quotazioni OMI** (Agenzia delle Entrate) — valori min/max €/mq della zona
+   B3 usati come **feature di base del valore di zona** (merge pandas
+   OMI↔case su `zona_omi` + `stato`);
+2. **dataset granulare di compravendite** con i servizi reali: `mq`, `piano`,
+   `ascensore`, `classe_energetica`, `stato_ristrutturazione`,
+   `distanza_mare_km`, `garage`.
+
+```bash
+python dataset_granulare.py     # genera le compravendite SIMULATE
+python ml_pipeline.py           # merge + training + valutazione (MAE, RMSE) + predict_price() + export JSON
+python build_dashboard.py       # inietta il modello in dashboard.html
+```
+
+`ml_pipeline.py` stampa MAE/RMSE/MAPE in cross-validation 5-fold, il confronto
+con la baseline OMI, l'importanza delle feature, ed espone
+`predict_price(...)` per un singolo appartamento (default: **Via Aurelia 111**,
+zona B3). Con il dataset simulato: MAE ≈ €27k, RMSE ≈ €34k, −28% di MAE vs
+baseline; stima civ. 111 ≈ €310k.
+
+**Dashboard interattiva** (`dashboard.html`): pagina self-contained dove muovi
+gli input (metratura, piano, stato, distanza mare, classe energetica,
+ascensore, garage) e il prezzo si aggiorna **live**. Il Random Forest è
+esportato in JSON (gli alberi) e **valutato nel browser**: la predizione
+coincide al centesimo con `predict_price()` di scikit-learn. Mostra anche
+intervallo ± MAE, posizione nel range OMI B3, forbice a 3 anni e importanza
+delle feature.
+
+> Il dataset delle singole compravendite è **simulato** (calibrato sui livelli
+> reali del litorale); le quotazioni di zona sono OMI reali. Sostituendo il CSV
+> con compravendite vere (stesse colonne) il modello si ri-addestra senza
+> modifiche al codice.
+
 ## Uso
 
 ```bash
