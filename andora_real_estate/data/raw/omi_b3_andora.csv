@@ -1,0 +1,10 @@
+# Quotazioni OMI - Agenzia delle Entrate - Comune di ANDORA (SV)
+# Zona OMI B3 "Litorale, Via Aurelia, Via Caprera, Via Vignetta" (fascia centrale/litorale).
+# Abitazioni civili, eur/mq per stato conservativo. Valori APPROSSIMATIVI trascritti da fonti
+# pubbliche che ripubblicano l'OMI: sostituire col download ufficiale (banche-dati OMI).
+# stato: 1=da ristrutturare, 2=abitabile, 3=buono, 4=ristrutturato
+zona,stato,eur_mq_min,eur_mq_max
+B3,1,2300,2900
+B3,2,2700,3400
+B3,3,3200,4100
+B3,4,3900,5200
