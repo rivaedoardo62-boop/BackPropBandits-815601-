@@ -1,0 +1,147 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Parametri economici e fiscali del modello di investimento (agente 4).
+#
+# ⚠️  LEGGI QUESTO PRIMA DI USARE I NUMERI CHE SEGUONO  ⚠️
+#
+# Questi valori sono PARAMETRI DI DEFAULT, non consulenza fiscale, e non sono
+# verificati contro la normativa vigente alla tua data di esecuzione. La
+# fiscalita' delle locazioni brevi in Italia e' cambiata piu' volte negli
+# ultimi anni (aliquote cedolare, numero di immobili, obblighi di ritenuta
+# degli intermediari, CIN, requisiti di sicurezza).
+#
+# Prima di prendere una decisione di acquisto:
+#   1. fai verificare ogni riga marcata `verify: true` a un commercialista;
+#   2. fai verificare le imposte d'atto a un notaio (variano con prezzo-valore,
+#      venditore privato vs impresa, prima/seconda casa);
+#   3. controlla il regolamento comunale per IMU, TARI e imposta di soggiorno,
+#      che sono decisi dal singolo comune.
+#
+# Il codice NON hardcoda nessuno di questi valori: legge solo da qui. Cambiare
+# un numero qui cambia tutti gli scenari, senza toccare il codice.
+# ─────────────────────────────────────────────────────────────────────────────
+
+meta:
+  ultima_revisione: "non verificata"
+  fonte: "valori indicativi di mercato, da validare"
+
+# ── Costi di acquisizione ────────────────────────────────────────────────────
+acquisizione:
+  # Provvigione agenzia sul prezzo, IVA inclusa (3% + 22% IVA = 3.66%)
+  provvigione_agenzia_pct: 0.0366
+  verify_provvigione: true
+
+  # Onorario notarile forfettario (esclusa imposta), euro
+  notaio_eur: 2500
+  verify_notaio: true
+
+  # Imposte d'atto. La base imponibile dipende dal regime:
+  #   base: "prezzo"    -> imposta calcolata sul corrispettivo
+  #   base: "catastale" -> regime prezzo-valore: rendita * rivalutazione * moltiplicatore
+  imposte_atto:
+    base: catastale
+    aliquota_registro_pct: 0.09      # seconda casa da privato
+    rivalutazione_rendita: 1.05
+    moltiplicatore_catastale: 126     # seconda casa, prezzo-valore
+    imposta_ipotecaria_eur: 50
+    imposta_catastale_eur: 50
+    verify: true
+    nota: >
+      Se il venditore e' un'impresa con IVA, il quadro cambia completamente
+      (IVA 10% o 22% sul prezzo + imposte fisse). Modella quel caso cambiando
+      base a "prezzo" e aliquota_registro_pct all'aliquota IVA corretta.
+
+  # Costi una tantum di messa a reddito
+  ristrutturazione_eur_mq_default: 0      # 0 = immobile gia' a reddito
+  arredo_eur_default: 12000
+  pratiche_avvio_eur: 1500                # SCIA/CIN, planimetrie, APE, allacci
+
+# ── Costi operativi annui ────────────────────────────────────────────────────
+gestione:
+  # Commissione OTA sul lordo incassato.
+  # Airbnb host-only ~15%; Booking 15-18%. Usa la media pesata dei tuoi canali.
+  commissione_ota_pct: 0.16
+  verify_commissione: true
+
+  # Pulizie: costo per soggiorno (non per notte).
+  pulizia_eur_per_soggiorno: 55
+  # Se ribalti la pulizia sull'ospite, imposta a true: entra nei ricavi lordi
+  # E nel costo, ma sotto cedolare secca la quota incassata resta imponibile.
+  pulizia_addebitata_ospite: true
+
+  utenze_fisse_eur_anno: 900              # quota indipendente dall'occupazione
+  utenze_variabili_eur_notte: 3.5
+
+  spese_condominiali_eur_anno: 1200
+  assicurazione_eur_anno: 300
+  manutenzione_pct_ricavi: 0.05
+  tari_eur_anno: 350
+
+  # Property management esterno, % sul lordo. 0 se gestisci in proprio.
+  property_management_pct: 0.20
+  verify_pm: true
+
+  # Durata media del soggiorno: determina il numero di pulizie.
+  soggiorno_medio_notti: 4.0
+
+# ── Imposte ricorrenti ───────────────────────────────────────────────────────
+imposte:
+  # IMU: dovuta sulle seconde case. Base = rendita * 1.05 * 160 (cat. A esclusa A/10).
+  imu:
+    aliquota_per_mille: 10.6              # massimo ordinario; il comune puo' ridurlo
+    rivalutazione_rendita: 1.05
+    moltiplicatore: 160
+    verify: true
+
+  # Regime sul reddito da locazione breve.
+  #   "cedolare"  -> aliquota piatta sul CORRISPETTIVO LORDO
+  #   "ordinario" -> reddito netto dei costi, tassato a IRPEF marginale
+  #   "migliore"  -> il modello calcola entrambi e usa il meno oneroso,
+  #                  riportando quanto sarebbe costata l'alternativa
+  # Default "migliore": con commissioni OTA e property management alti, la
+  # cedolare sul lordo non e' automaticamente conveniente, ed e' un errore che
+  # si paga ogni anno. La scelta effettiva resta del commercialista.
+  regime: migliore
+  cedolare:
+    aliquota_pct: 0.21
+    aliquota_pct_oltre_primo_immobile: 0.26
+    verify: true
+    nota_critica: >
+      Sotto cedolare secca la base imponibile e' il corrispettivo LORDO
+      percepito, comprensivo delle somme addebitate all'ospite (pulizie).
+      Le commissioni OTA e i costi di gestione NON sono deducibili. E' la
+      ragione per cui, oltre una certa incidenza dei costi, il regime
+      ordinario puo' convenire: il modello calcola entrambi e confronta.
+  ordinario:
+    aliquota_irpef_marginale_pct: 0.43
+    abbattimento_forfettario_pct: 0.00    # 0 per locazione breve non imprenditoriale
+    verify: true
+
+  # Imposta di soggiorno: incassata dall'ospite e riversata al comune.
+  # Partita di giro, non incide sul rendimento, ma incide sul prezzo percepito.
+  imposta_soggiorno_eur_persona_notte: 2.5
+  imposta_soggiorno_max_notti: 7
+
+# ── Finanziamento ────────────────────────────────────────────────────────────
+mutuo:
+  attivo: false
+  ltv: 0.60                                # loan-to-value
+  tasso_annuo_pct: 0.039
+  durata_anni: 20
+  spese_istruttoria_eur: 1500
+
+# ── Parametri di valutazione ─────────────────────────────────────────────────
+valutazione:
+  orizzonte_anni: 10
+  tasso_sconto_pct: 0.07                   # costo opportunita' del capitale
+  crescita_ricavi_annua_pct: 0.02
+  crescita_costi_annua_pct: 0.025
+  rivalutazione_immobile_annua_pct: 0.01
+  costo_uscita_pct: 0.04                   # agenzia + spese in vendita
+
+  # Soglie che l'agente 4 usa per il verdetto. Sono scelte di policy, non
+  # verita' di mercato: cambiale in base al tuo costo del capitale.
+  soglie:
+    net_yield_buono: 0.055
+    net_yield_accettabile: 0.035
+    dscr_minimo: 1.25
+    break_even_occupancy_max: 0.55

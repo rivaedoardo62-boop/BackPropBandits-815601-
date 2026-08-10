@@ -1,0 +1,116 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Registro delle sorgenti dati.
+#
+# Ogni sorgente dichiara il proprio stato di conformita'. Il connettore rifiuta
+# di partire se `compliance` non e' `allowed`. È una scelta deliberata: la
+# raccolta dati e' l'unico punto del sistema dove un errore ti espone
+# legalmente, quindi il gate sta nel codice e non nella buona volonta'.
+#
+#   allowed          -> uso consentito dai termini della fonte
+#   requires_licence -> serve contratto/accreditamento, non ancora ottenuto
+#   prohibited       -> i ToS vietano l'accesso automatizzato
+# ─────────────────────────────────────────────────────────────────────────────
+
+sources:
+
+  demo:
+    kind: synthetic
+    compliance: allowed
+    enabled: true
+    descrizione: >
+      Generatore sintetico calibrato sui prior in liguria.yaml. Non contiene
+      dati reali. Serve a far girare la pipeline end-to-end, scrivere i test e
+      dimostrare l'architettura senza dipendere da nessuna fonte esterna.
+
+  csv_import:
+    kind: file
+    compliance: allowed
+    enabled: true
+    descrizione: >
+      Importatore di export CSV/XLSX. È il canale con cui entrano nel sistema
+      i dati acquistati in licenza, gli export dell'extranet di cui sei
+      titolare (i TUOI annunci Airbnb/Booking) e i dataset open.
+    path_pattern: "rental_intelligence/data/import/*.csv"
+
+  omi:
+    kind: open_data
+    compliance: allowed
+    enabled: false
+    descrizione: >
+      Quotazioni Immobiliari OMI - Agenzia delle Entrate. Valori minimo/massimo
+      al mq per zona OMI, comune, tipologia e stato conservativo, semestrali.
+      È la base ufficiale per stimare il prezzo di acquisto e per validare che
+      un annuncio di vendita sia sopra o sotto mercato.
+    nota: >
+      Scarica il file dal portale dell'Agenzia delle Entrate e caricalo in
+      data/import/omi/. Verifica licenza e condizioni di riuso sul portale.
+
+  istat_turismo:
+    kind: open_data
+    compliance: allowed
+    enabled: false
+    descrizione: >
+      Movimento turistico (arrivi/presenze) e capacita' degli esercizi
+      ricettivi per comune/provincia. Serve a stimare il bacino di domanda e a
+      normalizzare l'occupazione osservata.
+
+  bdsr_cin:
+    kind: open_data
+    compliance: allowed
+    enabled: false
+    descrizione: >
+      Banca Dati Strutture Ricettive / Codice Identificativo Nazionale. Il CIN
+      e' la leva tecnica piu' importante di tutto il progetto: e' un
+      identificativo unico per unita' immobiliare, per cui due annunci su
+      piattaforme diverse che espongono lo stesso CIN sono lo stesso immobile,
+      con certezza. Riduce il problema di deduplica da inferenza statistica a
+      join esatto.
+    nota: >
+      Verifica modalita' di accesso e riuso del registro prima di attivarlo.
+
+  idealista_api:
+    kind: official_api
+    compliance: requires_licence
+    enabled: false
+    descrizione: >
+      API ufficiale Idealista per annunci di vendita e affitto lungo termine.
+      Richiede richiesta di accesso e chiave. Quota gratuita molto ridotta.
+    env_keys: [IDEALISTA_API_KEY, IDEALISTA_API_SECRET]
+
+  booking_demand_api:
+    kind: official_api
+    compliance: requires_licence
+    enabled: false
+    descrizione: >
+      Booking.com Demand API. Accesso riservato a partner approvati. È la via
+      legale per ottenere disponibilita' e prezzi hotel/appartamenti Booking.
+    env_keys: [BOOKING_DEMAND_API_KEY, BOOKING_AFFILIATE_ID]
+
+  str_provider:
+    kind: licensed_api
+    compliance: requires_licence
+    enabled: false
+    descrizione: >
+      Provider commerciale di dati short-term-rental (AirDNA, Transparent,
+      Key Data, Beyond e simili). Vendono esattamente il dato che serve
+      all'agente 3: ADR, occupazione, RevPAR per mercato, gia' deduplicati.
+      A pagamento, ma e' la scorciatoia legale che salta il 70% del lavoro.
+    env_keys: [STR_PROVIDER_API_KEY, STR_PROVIDER_BASE_URL]
+
+  airbnb_scraping:
+    kind: scraping
+    compliance: prohibited
+    enabled: false
+    descrizione: >
+      Scraping diretto di Airbnb. I Termini di Servizio vietano l'accesso
+      automatizzato. Il connettore NON esiste e non va scritto: e' qui elencato
+      perche' la richiesta iniziale lo prevedeva e la risposta e' un no motivato,
+      non un'omissione.
+    alternative: [str_provider, csv_import, bdsr_cin]
+
+  booking_scraping:
+    kind: scraping
+    compliance: prohibited
+    enabled: false
+    descrizione: Idem per Booking.com. Usa la Demand API.
+    alternative: [booking_demand_api, str_provider]

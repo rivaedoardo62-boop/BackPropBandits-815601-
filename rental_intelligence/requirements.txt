@@ -1,0 +1,15 @@
+# Core (obbligatorie)
+pandas>=2.0.0
+numpy>=1.24.0
+pydantic>=2.6.0
+PyYAML>=6.0
+python-dotenv>=1.0.0
+
+# Agente 5 - report LLM (opzionale: senza questo il report esce in modalita template)
+anthropic>=0.116.0
+
+# Connettori verso API ufficiali (opzionale, solo se attivi quelle sorgenti)
+requests>=2.31.0
+
+# Test
+pytest>=8.0.0

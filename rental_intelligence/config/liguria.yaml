@@ -1,0 +1,142 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Perimetro geografico e stagionalita' — Liguria
+#
+# NOTA SUI CODICI ISTAT: volutamente NON sono hardcoded qui. Scaricali dal
+# file ufficiale ISTAT "Codici statistici delle unita' amministrative
+# territoriali" e caricali con `ri.geo.load_istat_codes(path_csv)`. Inventarli
+# significherebbe sporcare ogni join successivo con dati falsi.
+#
+# I `seasonality_index` sotto sono PRIOR di partenza, non misure. Vanno
+# ricalibrati sui dati reali appena hai >= 1 stagione di osservazioni
+# (`ri.analytics.pricing.calibrate_seasonality`).
+# ─────────────────────────────────────────────────────────────────────────────
+
+regione: Liguria
+
+province:
+  IM: Imperia
+  SV: Savona
+  GE: Genova
+  SP: La Spezia
+
+# Macro-mercati: aggregati con dinamiche di prezzo/occupazione omogenee.
+# Il segmento di mercato usato dall'agente 3 e' (macro_market, tipologia,
+# fascia_capienza, stagione), non il singolo comune: nei comuni piccoli il
+# campione per comune e' troppo rado per statistiche affidabili.
+macro_markets:
+
+  riviera_ponente_estrema:
+    provincia: IM
+    profilo: transfrontaliero, forte quota francese, stagione lunga
+    comuni: [Ventimiglia, Bordighera, Ospedaletti, Camporosso, Vallecrosia]
+
+  sanremo_area:
+    provincia: IM
+    profilo: urbano-balneare, eventi (Festival), destagionalizzato parziale
+    comuni: [Sanremo, Taggia, Riva Ligure, Santo Stefano al Mare]
+
+  golfo_dianese:
+    provincia: IM
+    profilo: balneare familiare, forte concentrazione estiva
+    comuni: [Diano Marina, San Bartolomeo al Mare, Cervo, Imperia]
+
+  riviera_alassio:
+    provincia: SV
+    profilo: balneare medio-alto, seconde case storiche
+    comuni: [Alassio, Laigueglia, Andora, Albenga, Ceriale]
+
+  finalese:
+    provincia: SV
+    profilo: outdoor/arrampicata + mare, doppio picco (primavera e estate)
+    comuni: [Finale Ligure, Borgio Verezzi, Pietra Ligure, Loano, Noli]
+
+  savona_ponente_ge:
+    provincia: SV
+    profilo: urbano + crocieristico, stagione corta
+    comuni: [Savona, Vado Ligure, Spotorno, Bergeggi, Celle Ligure, Varazze]
+
+  genova_citta:
+    provincia: GE
+    profilo: urbano, business + city break, il piu' destagionalizzato
+    comuni: [Genova]
+
+  golfo_paradiso:
+    provincia: GE
+    profilo: alto di gamma, vincoli paesaggistici forti, offerta rigida
+    comuni: [Camogli, Recco, Sori, Bogliasco, Pieve Ligure]
+
+  tigullio:
+    provincia: GE
+    profilo: premium (Portofino) + balneare (Rapallo/Chiavari)
+    comuni: [Portofino, Santa Margherita Ligure, Rapallo, Zoagli, Chiavari, Lavagna]
+
+  tigullio_orientale:
+    provincia: GE
+    profilo: balneare, ottimo rapporto prezzo/rendita
+    comuni: [Sestri Levante, Moneglia, Casarza Ligure]
+
+  cinque_terre:
+    provincia: SP
+    profilo: >
+      turismo internazionale ad altissima intensita', offerta strutturalmente
+      vincolata (parco + centri storici), ADR piu' alti della regione
+    comuni: [Monterosso al Mare, Vernazza, Riomaggiore, Levanto, Bonassola, Framura, Deiva Marina]
+    note: >
+      Corniglia e' frazione di Vernazza, Manarola di Riomaggiore. Se una
+      sorgente restituisce quei nomi come "comune", vanno rimappati (vedi
+      `comune_aliases`) o i conteggi per comune risultano sbagliati.
+
+  golfo_dei_poeti:
+    provincia: SP
+    profilo: mix urbano (La Spezia) + premium costiero (Lerici, Portovenere)
+    comuni: [La Spezia, Lerici, Portovenere, Ameglia, Arcola]
+
+# Alias: frazioni e varianti che le OTA presentano come se fossero comuni.
+comune_aliases:
+  Corniglia: Vernazza
+  Manarola: Riomaggiore
+  Fegina: Monterosso al Mare
+  Arma di Taggia: Taggia
+  "Genova Nervi": Genova
+  "Genova Boccadasse": Genova
+  Le Grazie: Portovenere
+  Fezzano: Portovenere
+  San Terenzo: Lerici
+  Tellaro: Lerici
+
+# Fasce di capienza usate come chiave di segmentazione.
+capacity_buckets:
+  - {name: "1-2",  min: 1, max: 2}
+  - {name: "3-4",  min: 3, max: 4}
+  - {name: "5-6",  min: 5, max: 6}
+  - {name: "7+",   min: 7, max: 99}
+
+# Stagioni. Definite per mese perche' tutte le sorgenti danno almeno il mese.
+seasons:
+  alta:   [7, 8]
+  media:  [6, 9]
+  spalla: [4, 5, 10]
+  bassa:  [1, 2, 3, 11, 12]
+
+# PRIOR di stagionalita' ADR (moltiplicatore sul prezzo medio annuo).
+# Profilo "costiero" = balneare puro; "urbano" = Genova/La Spezia.
+# DA RICALIBRARE sui dati osservati: questi numeri servono solo a far girare
+# il modello prima di avere una stagione di storico.
+seasonality_prior:
+  costiero: {1: 0.62, 2: 0.62, 3: 0.70, 4: 0.85, 5: 0.95, 6: 1.15,
+             7: 1.55, 8: 1.80, 9: 1.05, 10: 0.82, 11: 0.62, 12: 0.68}
+  urbano:   {1: 0.85, 2: 0.88, 3: 0.95, 4: 1.05, 5: 1.10, 6: 1.10,
+             7: 1.05, 8: 0.95, 9: 1.12, 10: 1.05, 11: 0.90, 12: 0.95}
+
+# PRIOR di occupazione (quota di notti vendute sulle notti disponibili).
+occupancy_prior:
+  costiero: {1: 0.12, 2: 0.13, 3: 0.18, 4: 0.35, 5: 0.45, 6: 0.62,
+             7: 0.85, 8: 0.93, 9: 0.55, 10: 0.30, 11: 0.14, 12: 0.18}
+  urbano:   {1: 0.42, 2: 0.48, 3: 0.55, 4: 0.62, 5: 0.68, 6: 0.68,
+             7: 0.62, 8: 0.55, 9: 0.70, 10: 0.62, 11: 0.48, 12: 0.50}
+
+# Profilo assegnato a ciascun macro-mercato.
+market_profile:
+  genova_citta: urbano
+  golfo_dei_poeti: urbano
+  default: costiero
