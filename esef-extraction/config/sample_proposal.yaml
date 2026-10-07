@@ -1,0 +1,133 @@
+# Proposta di campione (Passo 3) — IN ATTESA DI APPROVAZIONE
+#
+# ATTENZIONE: filings.xbrl.org non riporta settore né indice/segmento di mercato.
+# I campi proposed_sector e proposed_market_segment sono indicati a mano da conoscenza
+# generale, NON verificati su fonti ufficiali (Borsa Italiana / FTSE Russell) e riferiti
+# a una composizione degli indici che cambia a ogni revisione trimestrale.
+# Vanno verificati prima dell'uso (colonna classification_status = "DA VERIFICARE").
+#
+# Criteri: xBRL-JSON disponibile per FY2024 e FY2025 (period_end 31/12),
+# nessun errore di validazione sulla versione proposta, esercizio solare,
+# period_end coerente con il nome del file. Si sono inclusi di proposito casi
+# "difficili" (versioni multiple, operazioni discontinue, perdite) perché il
+# campione deve mettere alla prova l'estrattore, non solo confermarlo.
+#
+# Gruppi ammessi: industrial_services | utility | bank | insurance
+
+issuers:
+  # --- Industriali e servizi (14) ---
+  - lei: BUCRF72VH5RBN7X3VL35
+    proposed_group: industrial_services
+    proposed_sector: Energia (petrolio e gas integrato)
+    proposed_market_segment: FTSE MIB
+    selection_rationale: Grande gruppo, molte voci e dimensioni; test di scala dell'estrattore.
+  - lei: 549300W384M3RI3VXU42
+    proposed_group: industrial_services
+    proposed_sector: Telecomunicazioni
+    proposed_market_segment: FTSE MIB
+    selection_rationale: Cessione della rete (NetCo) nel 2024, attese attività discontinue e comparativi rideterminati.
+  - lei: 815600EBD7FB00525B20
+    proposed_group: industrial_services
+    proposed_sector: Beni di lusso / abbigliamento
+    proposed_market_segment: FTSE MIB
+    selection_rationale: Due versioni FY2024 con hash diversi; nomi file non standard (lingua non deducibile).
+  - lei: ZYXJDNVM2JI3VBM8G556
+    proposed_group: industrial_services
+    proposed_sector: Sanità (apparecchi acustici, retail)
+    proposed_market_segment: FTSE MIB
+    selection_rationale: Goodwill e immateriali rilevanti; test per GOODWILL/INTANGIBLES.
+  - lei: 815600FBF92FD3531704
+    proposed_group: industrial_services
+    proposed_sector: Farmaceutico
+    proposed_market_segment: FTSE MIB
+    selection_rationale: Versioni in lingue diverse (it/en) per entrambi gli esercizi.
+  - lei: 8156000256C2431C2E92
+    proposed_group: industrial_services
+    proposed_sector: Automotive (veicoli a due ruote)
+    proposed_market_segment: FTSE Italia Mid Cap
+    selection_rationale: Manifatturiero con magazzino e debito; mid cap.
+  - lei: 81560048ECF8D2059980
+    proposed_group: industrial_services
+    proposed_sector: Servizi di navigazione aerea (regolato)
+    proposed_market_segment: FTSE Italia Mid Cap
+    selection_rationale: Servizi regolati, magazzino trascurabile; test dei mancanti attesi.
+  - lei: 8156000E09A52C4F8A38
+    proposed_group: industrial_services
+    proposed_sector: Beni di consumo durevoli (piccoli elettrodomestici)
+    proposed_market_segment: FTSE Italia Mid Cap
+    selection_rationale: Due versioni con hash diversi sia per FY2024 sia per FY2025.
+  - lei: 81560026FA1A26642782
+    proposed_group: industrial_services
+    proposed_sector: Occhialeria
+    proposed_market_segment: FTSE Italia Small Cap
+    selection_rationale: Versioni in lingue diverse; small cap.
+  - lei: 815600AA4525479C8138
+    proposed_group: industrial_services
+    proposed_sector: Calzature e abbigliamento
+    proposed_market_segment: FTSE Italia Small Cap
+    selection_rationale: Storico di perdite; test di segni e plausibilità.
+  - lei: 815600C41423BF4CC386
+    proposed_group: industrial_services
+    proposed_sector: Macchinari industriali (legno, vetro, pietra)
+    proposed_market_segment: STAR
+    selection_rationale: STAR, manifatturiero.
+  - lei: 815600115DA6E507AE33
+    proposed_group: industrial_services
+    proposed_sector: Componenti elettronici per HVAC/refrigerazione
+    proposed_market_segment: STAR
+    selection_rationale: STAR, acquisizioni recenti (goodwill).
+  - lei: 8156007E3375956ADD08
+    proposed_group: industrial_services
+    proposed_sector: Distribuzione di tecnologia (IT/elettronica)
+    proposed_market_segment: STAR
+    selection_rationale: Margini bassi, crediti commerciali elevati; versioni in lingue diverse.
+  - lei: 81560012F663E89E7085
+    proposed_group: industrial_services
+    proposed_sector: Laser medicali e industriali
+    proposed_market_segment: STAR
+    selection_rationale: STAR, mid-small.
+
+  # --- Utility (3) ---
+  - lei: 8156009414FD99443B48
+    proposed_group: utility
+    proposed_sector: Multiutility (ambiente, energia, acqua)
+    proposed_market_segment: FTSE MIB
+    selection_rationale: Utility grande.
+  - lei: 8156001EBD33FD474E60
+    proposed_group: utility
+    proposed_sector: Multiutility
+    proposed_market_segment: FTSE Italia Mid Cap
+    selection_rationale: Utility media, debito finanziario elevato (test BORROWINGS).
+  - lei: 815600FA7D9BAD18E930
+    proposed_group: utility
+    proposed_sector: Multiutility locale
+    proposed_market_segment: FTSE Italia Small Cap
+    selection_rationale: Utility piccola.
+
+  # --- Banche (2) ---
+  - lei: 815600E4E6DCD2D25E30
+    proposed_group: bank
+    proposed_sector: Banca
+    proposed_market_segment: FTSE MIB
+    selection_rationale: Banca grande; schemi bancari (attesi molti indicatori non applicabili).
+  - lei: 81560026D234790EB288
+    proposed_group: bank
+    proposed_sector: Banca
+    proposed_market_segment: FTSE Italia Small Cap
+    selection_rationale: Banca piccola.
+
+  # --- Assicurazioni (1) ---
+  - lei: 549300X5UKJVE386ZB61
+    proposed_group: insurance
+    proposed_sector: Assicurazioni
+    proposed_market_segment: FTSE MIB
+    selection_rationale: IFRS 17; schemi assicurativi.
+
+# Riserve (non incluse nella proposta), utilizzabili in caso di sostituzione:
+reserves:
+  - {lei: 815600BF2EA41687F764, note: "REVO Insurance - assicurazione, STAR (alternativa piccola a Generali)"}
+  - {lei: 8156004B244AA70DE787, note: "Credem - banca, mid cap; versioni con hash diversi"}
+  - {lei: 815600F25FF44EF1FA76, note: "Italgas - utility (distribuzione gas); versioni in lingue diverse"}
+  - {lei: 815600C79D0F31F4D395, note: "Interpump - macchinari industriali"}
+  - {lei: 549300UKR289DF4UXQ47, note: "Webuild - costruzioni, lavori in corso su ordinazione"}
+  - {lei: 8156007154CD8334D053, note: "Technoprobe - semiconduttori"}

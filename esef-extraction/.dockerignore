@@ -1,0 +1,11 @@
+# Nessun dato, ambiente locale o segreto nell'immagine
+data/
+annotations/
+.env
+.env.*
+.venv/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.git/
+docs/
