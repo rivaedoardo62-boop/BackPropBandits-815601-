@@ -1,0 +1,6 @@
+# Schema degli indicatori - compilato al Passo 5, dopo l'approvazione del
+# campione. Per ogni indicatore: codice interno, concetti IFRS candidati in
+# ordine di priorita', tipo di periodo (instant/duration), segno atteso.
+# Il file e' letto dal codice: cambiare gli indicatori non richiede modifiche
+# al codice.
+indicators: []

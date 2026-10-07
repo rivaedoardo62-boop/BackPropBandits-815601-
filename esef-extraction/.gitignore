@@ -1,0 +1,19 @@
+# Dati scaricati e generati: mai nel repository (si rigenerano con la CLI).
+data/raw/*
+data/interim/*
+data/output/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/output/.gitkeep
+
+# Ambiente locale e credenziali.
+.env
+.venv/
+
+# Artefatti Python.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/

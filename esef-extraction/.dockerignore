@@ -1,0 +1,11 @@
+# Niente dati, credenziali o ambienti locali nell'immagine.
+data
+annotations
+.env
+.env.*
+.venv
+.git
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.egg-info

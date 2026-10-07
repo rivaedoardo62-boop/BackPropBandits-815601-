@@ -1,0 +1,215 @@
+# Campione di emittenti (Passo 3) - PROPOSTA IN ATTESA DI APPROVAZIONE.
+#
+# - filings.xbrl.org non riporta ne' il settore ne' l'indice/segmento:
+#   `sector`, `sector_group` e `segment` sono PROPOSTE dell'assistente, da
+#   verificare (la composizione degli indici FTSE Italia cambia ogni trimestre).
+# - `name` serve solo alla lettura: il nome usato negli output e' quello
+#   restituito dall'API per il LEI.
+# - `status`: proposed (nel campione proposto) | reserve (riserva) |
+#   approved | rejected. Il download del Passo 4 riguardera' solo `approved`.
+# - Criteri usati: relazioni con fine periodo 31/12 per entrambi gli esercizi,
+#   xBRL-JSON disponibile, nessun errore di validazione segnalato dall'API,
+#   societa' di diritto italiano, preferenza per esercizi con una sola versione
+#   (Italgas e' incluso apposta come caso con versione italiana e inglese).
+
+fiscal_years: [2024, 2025]
+# Esercizio = anno della data di fine periodo; si accettano solo chiusure al 31/12.
+period_end_month_day: "12-31"
+
+sector_groups: [industriali_servizi, utility, banca, assicurazione]
+segments: [FTSE MIB, Mid Cap, Small Cap, STAR]
+
+issuers:
+  # --- Industriali e servizi (14) -------------------------------------------
+  - lei: BUCRF72VH5RBN7X3VL35
+    name: ENI S.P.A.
+    sector_group: industriali_servizi
+    sector: Energia - petrolio e gas integrato
+    segment: FTSE MIB
+    status: proposed
+  - lei: 549300W384M3RI3VXU42
+    name: TELECOM ITALIA S.P.A. (TIM)
+    sector_group: industriali_servizi
+    sector: Telecomunicazioni
+    segment: FTSE MIB
+    status: proposed
+    note: >-
+      Cessione della rete fissa (NetCo) nel 2024: possibili attivita' cessate e
+      riclassifiche dei comparativi (da verificare sul documento).
+  - lei: 815600A0C9AFC1F2A709
+    name: PIRELLI & C. S.P.A.
+    sector_group: industriali_servizi
+    sector: Componentistica auto - pneumatici
+    segment: FTSE MIB
+    status: proposed
+  - lei: 8156000256C2431C2E92
+    name: PIAGGIO & C. S.P.A.
+    sector_group: industriali_servizi
+    sector: Veicoli a due ruote e commerciali leggeri
+    segment: Mid Cap
+    status: proposed
+  - lei: 81560048ECF8D2059980
+    name: ENAV S.P.A.
+    sector_group: industriali_servizi
+    sector: Servizi di assistenza al volo (attivita' regolata)
+    segment: Mid Cap
+    status: proposed
+  - lei: 8156007154CD8334D053
+    name: TECHNOPROBE S.P.A.
+    sector_group: industriali_servizi
+    sector: Semiconduttori - probe card
+    segment: Mid Cap
+    status: proposed
+  - lei: 8156004C3711C92F7648
+    name: INTERCOS S.P.A.
+    sector_group: industriali_servizi
+    sector: Cosmetica conto terzi (B2B)
+    segment: Mid Cap
+    status: proposed
+  - lei: 815600C41423BF4CC386
+    name: BIESSE S.P.A.
+    sector_group: industriali_servizi
+    sector: Macchinari per legno, vetro e pietra
+    segment: STAR
+    status: proposed
+  - lei: 815600115DA6E507AE33
+    name: CAREL INDUSTRIES S.P.A.
+    sector_group: industriali_servizi
+    sector: Componenti per condizionamento e refrigerazione
+    segment: STAR
+    status: proposed
+    note: Emittente usato per le richieste di prova dell'API (docs/api_notes.md).
+  - lei: 815600C851C90CAE6438
+    name: GAROFALO HEALTH CARE S.P.A.
+    sector_group: industriali_servizi
+    sector: Sanita' privata - servizi ospedalieri
+    segment: STAR
+    status: proposed
+  - lei: 81560012F663E89E7085
+    name: EL.EN. S.P.A.
+    sector_group: industriali_servizi
+    sector: Sistemi laser medicali e industriali
+    segment: STAR
+    status: proposed
+  - lei: 815600AA4525479C8138
+    name: GEOX S.P.A.
+    sector_group: industriali_servizi
+    sector: Calzature e abbigliamento
+    segment: Small Cap
+    status: proposed
+  - lei: 5493005HPJ40IY377O47
+    name: SOGEFI S.P.A.
+    sector_group: industriali_servizi
+    sector: Componentistica auto
+    segment: Small Cap
+    status: proposed
+    note: >-
+      Cessione della divisione filtrazione nel 2024 (da verificare): possibili
+      attivita' cessate nei comparativi. Nell'indice API una relazione con
+      pacchetto "2022-12-31" ha period_end 2023-11-30 (anomalia dei metadati,
+      non riguarda gli esercizi del campione).
+  - lei: 815600FE9E92D9D6C309
+    name: TREVI - FINANZIARIA INDUSTRIALE S.P.A.
+    sector_group: industriali_servizi
+    sector: Ingegneria del sottosuolo e fondazioni
+    segment: Small Cap
+    status: proposed
+
+  # --- Utility (3) ------------------------------------------------------------
+  - lei: 8156009414FD99443B48
+    name: HERA S.P.A.
+    sector_group: utility
+    sector: Multiutility (energia, ambiente, ciclo idrico)
+    segment: FTSE MIB
+    status: proposed
+  - lei: 815600F25FF44EF1FA76
+    name: ITALGAS S.P.A.
+    sector_group: utility
+    sector: Distribuzione gas (attivita' regolata)
+    segment: FTSE MIB
+    status: proposed
+    note: >-
+      Due versioni per esercizio (indizio dal nome file: italiano e inglese):
+      proposta la versione italiana. Acquisizione di 2i Rete Gas nel 2025 (da
+      verificare): possibile discontinuita' di perimetro.
+  - lei: 815600FA7D9BAD18E930
+    name: ACINQUE S.P.A.
+    sector_group: utility
+    sector: Multiutility locale
+    segment: Small Cap
+    status: proposed
+
+  # --- Banche (2) -------------------------------------------------------------
+  - lei: 815600E4E6DCD2D25E30
+    name: BANCO BPM S.P.A.
+    sector_group: banca
+    sector: Banca commerciale
+    segment: FTSE MIB
+    status: proposed
+    note: >-
+      Schemi bancari (Circolare Banca d'Italia 262): REVENUE, OPERATING_PROFIT,
+      INVENTORIES e TRADE_RECEIVABLES probabilmente non applicabili.
+  - lei: 81560026D234790EB288
+    name: BANCO DI DESIO E DELLA BRIANZA S.P.A.
+    sector_group: banca
+    sector: Banca commerciale
+    segment: Small Cap
+    status: proposed
+    note: >-
+      Schemi bancari (Circolare Banca d'Italia 262): REVENUE, OPERATING_PROFIT,
+      INVENTORIES e TRADE_RECEIVABLES probabilmente non applicabili.
+
+  # --- Assicurazione (1) ------------------------------------------------------
+  - lei: 549300X5UKJVE386ZB61
+    name: ASSICURAZIONI GENERALI S.P.A.
+    sector_group: assicurazione
+    sector: Assicurazioni (vita e danni)
+    segment: FTSE MIB
+    status: proposed
+    note: >-
+      Schemi assicurativi (IFRS 17): REVENUE come ifrs-full:Revenue
+      probabilmente non applicabile.
+
+  # --- Riserve (non nel campione; utili se un proposto viene scartato) --------
+  - lei: 815600C79D0F31F4D395
+    name: INTERPUMP GROUP S.P.A.
+    sector_group: industriali_servizi
+    sector: Meccanica - pompe e oleodinamica
+    segment: FTSE MIB
+    status: reserve
+  - lei: ZYXJDNVM2JI3VBM8G556
+    name: AMPLIFON S.P.A.
+    sector_group: industriali_servizi
+    sector: Sanita' - soluzioni per l'udito
+    segment: FTSE MIB
+    status: reserve
+  - lei: 8156004CC118B7885065
+    name: AEROPORTO GUGLIELMO MARCONI DI BOLOGNA S.P.A.
+    sector_group: industriali_servizi
+    sector: Servizi aeroportuali (concessione)
+    segment: STAR
+    status: reserve
+  - lei: 815600049A1F9AFE6666
+    name: ARNOLDO MONDADORI EDITORE S.P.A.
+    sector_group: industriali_servizi
+    sector: Editoria e media
+    segment: Small Cap
+    status: reserve
+  - lei: 8156001EBD33FD474E60
+    name: IREN S.P.A.
+    sector_group: utility
+    sector: Multiutility
+    segment: Mid Cap
+    status: reserve
+  - lei: 549300L7YCATGO57ZE10
+    name: FINECOBANK S.P.A.
+    sector_group: banca
+    sector: Banca diretta e brokerage
+    segment: FTSE MIB
+    status: reserve
+  - lei: 815600BF2EA41687F764
+    name: REVO INSURANCE S.P.A.
+    sector_group: assicurazione
+    sector: Assicurazioni danni (specialty)
+    segment: STAR
+    status: reserve
