@@ -1,0 +1,21 @@
+# Dati: mai versionati (solo le cartelle, tramite .gitkeep)
+data/raw/*
+data/interim/*
+data/output/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/output/.gitkeep
+
+# Configurazione locale (nessuna credenziale e' necessaria, ma .env resta fuori dal repository)
+.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+.pytest_cache/
+
+# Download interrotti
+*.part

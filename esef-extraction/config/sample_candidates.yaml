@@ -1,0 +1,176 @@
+# Passo 3 - Proposta di campione (20 emittenti, esercizi 2024 e 2025)
+#
+# STATO: PROPOSTA, IN ATTESA DI APPROVAZIONE. Il download (Passo 4) rifiuta di
+# partire finche' `status` non e' "approvata" e i campi di approvazione non sono
+# compilati da chi approva.
+#
+# ATTENZIONE: settore, indice FTSE Italia e appartenenza al segmento STAR sono
+# PROPOSTE dell'assistente basate su conoscenza generale, NON verificate.
+# filings.xbrl.org non riporta queste informazioni. Vanno confermate su fonti
+# ufficiali (Borsa Italiana / Euronext Milan, composizione indici FTSE Italia e
+# segmento STAR) alla data di riferimento che sceglierete: la composizione degli
+# indici cambia a ogni revisione trimestrale.
+#
+# Criteri di eleggibilita' applicati dal codice (src/extraction/sources/sample.py):
+#   - relazione con xBRL-JSON per entrambi gli esercizi;
+#   - chiusura dell'esercizio al 31/12 (esercizi non solari esclusi: vedi README);
+#   - data nel nome del file coerente con il period_end dell'API.
+# L'elenco di tutti gli emittenti eleggibili e' in data/interim/eligible_issuers.csv,
+# per sostituire facilmente un candidato.
+
+status: proposta            # proposta | approvata
+approved_by: null           # da compilare da chi approva
+approved_on: null           # AAAA-MM-GG
+fiscal_years: [2024, 2025]
+
+targets:                    # composizione richiesta [min, max]
+  industriali_servizi: [13, 15]
+  utility: [2, 3]
+  banca: [2, 2]
+  assicurazione: [1, 1]
+
+candidates:
+  # --- Industriali e servizi -------------------------------------------------
+  - lei: BUCRF72VH5RBN7X3VL35
+    issuer: ENI S.p.A.
+    group: industriali_servizi
+    sector_proposed: Energia (oil & gas integrato)
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: Grande gruppo multi-segmento; test su volume e varieta' di fact.
+  - lei: 815600A0C9AFC1F2A709
+    issuer: Pirelli & C. S.p.A.
+    group: industriali_servizi
+    sector_proposed: Automotive (pneumatici)
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: Industriale di grandi dimensioni con schemi IFRS standard.
+  - lei: 815600EBD7FB00525B20
+    issuer: Moncler S.p.A.
+    group: industriali_servizi
+    sector_proposed: Beni di lusso (abbigliamento)
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: FY2024 presente in due versioni con lo stesso suffisso di lingua; test della regola di scelta della versione.
+  - lei: 815600FBF92FD3531704
+    issuer: Recordati S.p.A.
+    group: industriali_servizi
+    sector_proposed: Farmaceutico
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: Versioni IT ed EN in entrambi gli esercizi; test della scelta per lingua e del confronto IT/EN.
+  - lei: 549300W384M3RI3VXU42
+    issuer: Telecom Italia S.p.A. (TIM)
+    group: industriali_servizi
+    sector_proposed: Telecomunicazioni
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: Cessione della rete fissa nel 2024; possibili attivita' cessate e comparativi rideterminati (da verificare sui documenti).
+  - lei: 549300UKR289DF4UXQ47
+    issuer: Webuild S.p.A.
+    group: industriali_servizi
+    sector_proposed: Costruzioni e infrastrutture
+    index_proposed: FTSE Italia Mid Cap
+    star_proposed: false
+    rationale: Contratti pluriennali e indebitamento rilevante; test dell'indicatore BORROWINGS. Indice incerto (possibile FTSE MIB).
+  - lei: 8156000256C2431C2E92
+    issuer: Piaggio & C. S.p.A.
+    group: industriali_servizi
+    sector_proposed: Automotive (veicoli a due ruote)
+    index_proposed: FTSE Italia Mid Cap
+    star_proposed: false
+    rationale: Industriale mid cap. Indice incerto (possibile Small Cap).
+  - lei: 81560048ECF8D2059980
+    issuer: ENAV S.p.A.
+    group: industriali_servizi
+    sector_proposed: Servizi di trasporto (controllo del traffico aereo)
+    index_proposed: FTSE Italia Mid Cap
+    star_proposed: false
+    rationale: Servizi regolati; struttura di bilancio diversa da un manifatturiero.
+  - lei: 815600AA4525479C8138
+    issuer: Geox S.p.A.
+    group: industriali_servizi
+    sector_proposed: Abbigliamento e calzature
+    index_proposed: FTSE Italia Small Cap
+    star_proposed: false
+    rationale: Small cap non STAR, settore consumer.
+  - lei: 81560026FA1A26642782
+    issuer: Safilo Group S.p.A.
+    group: industriali_servizi
+    sector_proposed: Occhialeria
+    index_proposed: FTSE Italia Small Cap
+    star_proposed: false
+    rationale: Versioni IT ed EN in entrambi gli esercizi; FY2025 in formato .xbri.
+  - lei: 8156008BFBC06F53DD56
+    issuer: Cembre S.p.A.
+    group: industriali_servizi
+    sector_proposed: Componenti elettrici
+    index_proposed: FTSE Italia Small Cap
+    star_proposed: true
+    rationale: Emittente STAR di piccole dimensioni.
+  - lei: 81560012F663E89E7085
+    issuer: El.En. S.p.A.
+    group: industriali_servizi
+    sector_proposed: Apparecchiature laser (medicale e industriale)
+    index_proposed: FTSE Italia Small Cap
+    star_proposed: true
+    rationale: Emittente STAR. Indice incerto (possibile Mid Cap).
+  - lei: 815600C41423BF4CC386
+    issuer: Biesse S.p.A.
+    group: industriali_servizi
+    sector_proposed: Macchinari industriali
+    index_proposed: FTSE Italia Small Cap
+    star_proposed: true
+    rationale: Emittente STAR, beni strumentali.
+  - lei: 815600E4FE816F540F98
+    issuer: Gefran S.p.A.
+    group: industriali_servizi
+    sector_proposed: Componenti per l'automazione industriale
+    index_proposed: FTSE Italia Small Cap
+    star_proposed: true
+    rationale: Emittente STAR di piccole dimensioni.
+  # --- Utility ---------------------------------------------------------------
+  - lei: 8156009414FD99443B48
+    issuer: Hera S.p.A.
+    group: utility
+    sector_proposed: Multiutility
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: Utility di grandi dimensioni; nome del file FY2025 diverso dagli anni precedenti.
+  - lei: 549300Q3448N041CTH56
+    issuer: ACEA S.p.A.
+    group: utility
+    sector_proposed: Multiutility (idrico ed energia)
+    index_proposed: FTSE Italia Mid Cap
+    star_proposed: false
+    rationale: Utility mid cap.
+  - lei: 815600FA7D9BAD18E930
+    issuer: Acinque S.p.A.
+    group: utility
+    sector_proposed: Multiutility locale
+    index_proposed: FTSE Italia Small Cap
+    star_proposed: false
+    rationale: Utility small cap.
+  # --- Banche ----------------------------------------------------------------
+  - lei: 815600E4E6DCD2D25E30
+    issuer: Banco BPM S.p.A.
+    group: banca
+    sector_proposed: Banca
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: Banca di grandi dimensioni; schemi di bilancio bancari, molti indicatori non applicabili.
+  - lei: 8156004B244AA70DE787
+    issuer: Credito Emiliano S.p.A. (Credem)
+    group: banca
+    sector_proposed: Banca
+    index_proposed: FTSE Italia Mid Cap
+    star_proposed: false
+    rationale: Banca mid cap; FY2025 presente in due versioni con lo stesso suffisso di lingua.
+  # --- Assicurazioni ---------------------------------------------------------
+  - lei: 549300X5UKJVE386ZB61
+    issuer: Assicurazioni Generali S.p.A.
+    group: assicurazione
+    sector_proposed: Assicurazione
+    index_proposed: FTSE MIB
+    star_proposed: false
+    rationale: Assicurazione (IFRS 17); molti indicatori non applicabili.

@@ -1,0 +1,8 @@
+# Schema degli indicatori (Passo 5).
+#
+# NON ANCORA COMPILATO: va definito dopo l'approvazione del campione (Passo 3),
+# perche' la presenza di banche e assicurazioni incide sui concetti candidati e
+# sull'applicabilita' di ciascun indicatore. Struttura prevista per ogni voce:
+# codice interno, concetti IFRS candidati in ordine di priorita', tipo di periodo
+# (instant/duration), segno atteso.
+indicators: []
